@@ -5,5 +5,5 @@ This package provides a modular structure for processing and visualizing utility
 from the U.S. Utility Rate Database (URDB).
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "URDB Tariff Viewer Team"

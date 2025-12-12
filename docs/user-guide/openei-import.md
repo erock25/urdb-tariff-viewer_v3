@@ -1,6 +1,10 @@
-# OpenEI Import - Quick Start Guide
+# OpenEI Tariff Import Guide
 
-## 🚀 Get Started in 3 Steps
+## Overview
+
+The OpenEI Import feature allows you to import tariffs directly from the OpenEI Utility Rate Database API with one click.
+
+## Quick Start (3 Steps)
 
 ### Step 1: Get an API Key (2 minutes)
 
@@ -14,9 +18,8 @@ Choose **ONE** method:
 
 #### Option A: Streamlit Secrets (Recommended - Persistent)
 
-1. Create a `.streamlit` folder in your project root
-2. Create a file named `secrets.toml` inside it
-3. Add your API key:
+1. Create/edit `.streamlit/secrets.toml` in your project root
+2. Add your API key:
 
 ```toml
 OPENEI_API_KEY = "paste_your_api_key_here"
@@ -71,7 +74,7 @@ Even with a configured key, you can enter a different key in the app to temporar
    - Select from "👤 User Tariffs" dropdown
    - Analyze!
 
-## 📝 Example
+## Example
 
 **Example Tariff ID:** `674e0b87201c6bd096007a5a`
 
@@ -80,14 +83,14 @@ Even with a configured key, you can enter a different key in the app to temporar
 3. You'll see: "✅ Imported: Utility_Name_Rate_Name.json"
 4. Refresh and select your new tariff
 
-## 🎯 Pro Tips
+## Pro Tips
 
-- **Save API Key**: Use environment variable so you don't have to enter it every time
+- **Save API Key**: Use secrets.toml so you don't have to enter it every time
 - **Bookmark IDs**: Keep a list of frequently used tariff IDs
 - **Check Details**: Read the success message to verify correct tariff imported
 - **Remember to Refresh**: New tariffs appear after page refresh
 
-## ❓ Troubleshooting
+## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
@@ -96,19 +99,8 @@ Even with a configured key, you can enter a different key in the app to temporar
 | "Tariff not found" | Verify the tariff ID is correct |
 | Don't see new tariff | Refresh the page |
 
-## 📚 More Help
-
-- **Full Documentation**: See `OPENEI_IMPORT_FEATURE.md`
-- **Visual Guide**: See `OPENEI_IMPORT_VISUAL_GUIDE.md`
-- **Implementation Details**: See `OPENEI_IMPORT_IMPLEMENTATION_SUMMARY.md`
-
-## 🔗 Important Links
+## Important Links
 
 - **Get API Key**: https://openei.org/services/api/signup/
 - **Browse Tariffs**: https://openei.org/wiki/Utility_Rate_Database
 - **OpenEI Home**: https://openei.org/
-
----
-
-**That's it!** You're ready to import tariffs from OpenEI. 🎉
-

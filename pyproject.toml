@@ -3,13 +3,13 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "urdb-tariff-viewer-v2"
-version = "2.0.0"
+name = "urdb-tariff-viewer"
+version = "2.1.0"
 description = "A comprehensive Streamlit application for viewing and editing utility rate structures from the U.S. Utility Rate Database (URDB)"
 authors = [{name = "URDB Tariff Viewer Team"}]
 readme = "README.md"
-license = {text = "MIT"}
-requires-python = ">=3.8"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -17,12 +17,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Topic :: Utilities",
+    "Framework :: Streamlit",
 ]
 dependencies = [
     "streamlit>=1.28.0",
@@ -50,9 +51,18 @@ docs = [
 Homepage = "https://github.com/erock25/urdb-tariff-viewer_v2"
 Repository = "https://github.com/erock25/urdb-tariff-viewer_v2.git"
 Issues = "https://github.com/erock25/urdb-tariff-viewer_v2/issues"
+Documentation = "https://github.com/erock25/urdb-tariff-viewer_v2/tree/main/docs"
+Changelog = "https://github.com/erock25/urdb-tariff-viewer_v2/blob/main/CHANGELOG.md"
 
 [project.scripts]
 urdb-viewer = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
 
 [tool.black]
 line-length = 88
@@ -79,7 +89,7 @@ line_length = 88
 known_first_party = ["src"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

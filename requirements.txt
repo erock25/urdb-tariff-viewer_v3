@@ -1,10 +1,5 @@
 # URDB Tariff Viewer Requirements
+# This file references the base requirements for convenience
+# For development, use: pip install -r requirements/dev.txt
 
-streamlit>=1.28.0
-pandas>=2.0.0
-numpy>=1.24.0
-plotly>=5.15.0
-openpyxl>=3.0.0
-matplotlib>=3.5.0
-requests>=2.31.0
-pathlib
+-r requirements/base.txt

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Tariff Builder** is a new feature in the URDB JSON Viewer that allows you to create custom utility tariff JSON files from scratch through an intuitive graphical user interface. This eliminates the need to manually edit JSON files and helps ensure your tariffs are properly formatted and valid.
+The **Tariff Builder** is a feature in the URDB JSON Viewer that allows you to create custom utility tariff JSON files from scratch through an intuitive graphical user interface. This eliminates the need to manually edit JSON files and helps ensure your tariffs are properly formatted and valid.
 
 ## Accessing the Tariff Builder
 
@@ -231,14 +231,6 @@ Skip if not applicable, or add:
 **Changes not saving:**
 - Solution: Ensure you clicked the "💾 Save Tariff" button in the Preview & Save tab
 
-### Getting Help
-
-If you encounter issues:
-1. Check the validation messages in the Preview & Save tab
-2. Review your configuration in each section
-3. Use the JSON Preview to inspect the structure
-4. Compare with existing sample tariffs in the `data/tariffs/` directory
-
 ## JSON Structure Reference
 
 The Tariff Builder creates JSON files compatible with the U.S. Utility Rate Database (URDB) format. Key fields include:
@@ -269,39 +261,3 @@ The Tariff Builder creates JSON files compatible with the U.S. Utility Rate Data
 3. **Verify Schedules**: Double-check that peak hours match the utility's definition
 4. **Test with Load Profiles**: After creating your tariff, test it with the Cost Calculator
 5. **Document Assumptions**: Use the description and comments fields to note any assumptions
-
-## Future Enhancements
-
-Potential features in future versions:
-- Support for tiered/block rate structures
-- Holiday schedule configuration
-- Seasonal holiday rules
-- Export to other formats (CSV, Excel)
-- Import from URDB API
-- Template library for common rate structures
-
-## Examples
-
-### Example 1: Simple Flat Rate
-- 1 energy period: $0.15/kWh all hours
-- No demand charges
-- $10 fixed monthly charge
-
-### Example 2: Basic TOU (2 periods)
-- Off-Peak: $0.10/kWh (nights and weekends)
-- Peak: $0.25/kWh (weekday afternoons)
-- Flat demand: $5/kW
-- $20 fixed charge
-
-### Example 3: Complex Commercial TOU
-- 6 energy periods (Winter/Summer × Off-Peak/Mid-Peak/Peak)
-- 4 demand charge periods
-- Seasonal flat demand: $8/kW (winter), $15/kW (summer)
-- $50 fixed charge
-
-## Conclusion
-
-The Tariff Builder streamlines the process of creating custom utility tariffs. By following this guide and using the built-in validation features, you can quickly create accurate, properly formatted tariff files for analysis in the URDB JSON Viewer.
-
-For questions or feature requests, please open an issue on GitHub.
-

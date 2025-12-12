@@ -6,29 +6,46 @@ Updated: 2025-11-23
 """
 
 import streamlit as st
-import sys
 from pathlib import Path
 from typing import Optional
 
-# Add the parent directory to sys.path so we can import from src
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import our modular components
-from src.config.settings import Settings
-from src.utils.styling import apply_custom_css, create_section_header_html, create_custom_divider_html
-from src.services.file_service import FileService
-from src.models.tariff import TariffViewer, create_temp_viewer_with_modified_tariff
-from src.components.sidebar import create_sidebar
-from src.components.energy_rates import render_energy_rates_tab
-from src.components.demand_rates import render_demand_rates_tab
-from src.components.flat_demand_rates import render_flat_demand_rates_tab
-from src.components.cost_calculator import (
-    render_cost_calculator_tab,
-    render_load_factor_analysis_tab,
-    render_utility_cost_calculation_tab
-)
-from src.components.load_generator import render_load_generator_tab
-from src.components.tariff_builder import render_tariff_builder_tab
+# Import our modular components using relative imports when run as module
+# or absolute imports when run directly via streamlit
+try:
+    from src.config.settings import Settings
+    from src.utils.styling import apply_custom_css, create_section_header_html, create_custom_divider_html
+    from src.services.file_service import FileService
+    from src.models.tariff import TariffViewer, create_temp_viewer_with_modified_tariff
+    from src.components.sidebar import create_sidebar
+    from src.components.energy_rates import render_energy_rates_tab
+    from src.components.demand_rates import render_demand_rates_tab
+    from src.components.flat_demand_rates import render_flat_demand_rates_tab
+    from src.components.cost_calculator import (
+        render_cost_calculator_tab,
+        render_load_factor_analysis_tab,
+        render_utility_cost_calculation_tab
+    )
+    from src.components.load_generator import render_load_generator_tab
+    from src.components.tariff_builder import render_tariff_builder_tab
+except ImportError:
+    # Fallback for when running directly with streamlit run src/main.py
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from src.config.settings import Settings
+    from src.utils.styling import apply_custom_css, create_section_header_html, create_custom_divider_html
+    from src.services.file_service import FileService
+    from src.models.tariff import TariffViewer, create_temp_viewer_with_modified_tariff
+    from src.components.sidebar import create_sidebar
+    from src.components.energy_rates import render_energy_rates_tab
+    from src.components.demand_rates import render_demand_rates_tab
+    from src.components.flat_demand_rates import render_flat_demand_rates_tab
+    from src.components.cost_calculator import (
+        render_cost_calculator_tab,
+        render_load_factor_analysis_tab,
+        render_utility_cost_calculation_tab
+    )
+    from src.components.load_generator import render_load_generator_tab
+    from src.components.tariff_builder import render_tariff_builder_tab
 
 
 def initialize_app(dark_mode: bool = False) -> None:

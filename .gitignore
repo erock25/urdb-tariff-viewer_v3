@@ -59,5 +59,13 @@ logs/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Archive files (if you don't want to include old versions)
-# Archive/
+# Archive files (old versions tracked by git history)
+Archive/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Build artifacts
+*.egg-info/

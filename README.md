@@ -1,8 +1,8 @@
-# URDB Tariff Viewer & Editor v2.0
+# URDB Tariff Viewer & Editor
 
 A comprehensive, modular Streamlit application for viewing and editing utility rate structures from the U.S. Utility Rate Database (URDB). This application provides interactive visualizations, editing capabilities, cost calculations, and load profile generation for utility rate analysis.
 
-## ✨ New in Version 2.0
+## ✨ Key Features
 
 - **🏗️ Modular Architecture**: Complete restructure for better team collaboration and maintainability
 - **🧪 Comprehensive Testing**: Full test suite with pytest integration
@@ -56,7 +56,7 @@ A comprehensive, modular Streamlit application for viewing and editing utility r
 - **URDB Compatible**: Creates properly formatted URDB JSON files
 - **No JSON Editing Required**: Build complex tariffs without manual file editing
 
-📚 **Documentation**: See `TARIFF_BUILDER_GUIDE.md` for detailed instructions and `TARIFF_BUILDER_QUICK_REFERENCE.md` for quick tips
+📚 **Documentation**: See [Tariff Builder Guide](docs/user-guide/tariff-builder.md) for detailed instructions
 
 ### 🌐 OpenEI Tariff Import (NEW!)
 - **Direct API Integration**: Import tariffs directly from OpenEI's Utility Rate Database
@@ -66,7 +66,7 @@ A comprehensive, modular Streamlit application for viewing and editing utility r
 - **Flexible Authentication**: Use secrets.toml (recommended), environment variable, or direct input for API key
 - **Override Capability**: Temporarily use a different API key without changing configuration
 
-📚 **Documentation**: See `OPENEI_IMPORT_QUICK_START.md` for quick setup or `OPENEI_IMPORT_FEATURE.md` for complete guide
+📚 **Documentation**: See [OpenEI Import Guide](docs/user-guide/openei-import.md) for setup and usage
 
 ## Installation
 
@@ -133,8 +133,7 @@ mypy src/
 6. **Validate & Save**: Review your configuration and save to user_data directory
 7. **Use Your Tariff**: Refresh the page and select your new tariff from the sidebar
 
-📖 **Detailed Guide**: See `TARIFF_BUILDER_GUIDE.md` for comprehensive instructions  
-⚡ **Quick Start**: See `TARIFF_BUILDER_QUICK_REFERENCE.md` for a 5-minute tutorial
+📖 **Detailed Guide**: See [Tariff Builder Guide](docs/user-guide/tariff-builder.md) for comprehensive instructions
 
 ### Understanding the Visualizations
 - **Energy Rates**: Displayed in $/kWh with blue color gradients
@@ -188,17 +187,65 @@ The application expects URDB JSON files in the standard format:
 
 Modified tariffs are saved to the `modified_tariffs/` directory with the prefix "modified_" added to the original filename.
 
+## Project Structure
+
+```
+URDB_JSON_Viewer_v3/
+├── src/                    # Application source code
+│   ├── main.py             # Entry point
+│   ├── components/         # UI components
+│   ├── services/           # Business logic
+│   ├── models/             # Data models
+│   ├── utils/              # Utilities
+│   └── config/             # Configuration
+├── data/                   # Data files
+│   ├── tariffs/            # Sample tariffs
+│   ├── load_profiles/      # Load profile CSVs
+│   └── user_data/          # User-created tariffs
+├── tests/                  # Test suite
+├── docs/                   # Documentation
+│   ├── user-guide/         # User documentation
+│   └── development/        # Developer documentation
+└── requirements/           # Dependencies
+```
+
+## Documentation
+
+- [Quick Reference](docs/user-guide/quick-reference.md) - Common tasks and shortcuts
+- [Tariff Builder Guide](docs/user-guide/tariff-builder.md) - Create custom tariffs
+- [OpenEI Import Guide](docs/user-guide/openei-import.md) - Import from OpenEI API
+- [Deployment Guide](docs/deployment.md) - Deploy to various platforms
+- [Architecture](docs/development/architecture.md) - Technical overview
+- [Changelog](CHANGELOG.md) - Version history
+
 ## Requirements
 
-- Python 3.8+
-- Streamlit 1.26.0+
-- Pandas 1.5.0+
-- NumPy 1.23.0+
-- Plotly 6.3.0+
+- Python 3.9+
+- Streamlit 1.28.0+
+- Pandas 2.0.0+
+- NumPy 1.24.0+
+- Plotly 5.15.0+
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests to improve the application.
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+### Development Setup
+
+```bash
+# Install dev dependencies
+pip install -r requirements/dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests
+pytest
+
+# Format code
+black src/ tests/
+isort src/ tests/
+```
 
 ## License
 
