@@ -12,7 +12,7 @@ This guide covers deploying the URDB Tariff Viewer application to various platfo
 
 ### Option 1: Streamlit Cloud (Recommended) ⭐
 
-**Pros:** Free, easiest setup, optimized for Streamlit apps  
+**Pros:** Free, easiest setup, optimized for Streamlit apps
 **Cons:** Limited customization, may have usage limits
 
 #### Steps:
@@ -28,7 +28,7 @@ This guide covers deploying the URDB Tariff Viewer application to various platfo
    - Go to [share.streamlit.io](https://share.streamlit.io)
    - Connect your GitHub account
    - Select your repository
-   - Set main file path to `src/main.py`
+   - Set main file path to `streamlit_app.py`
    - Click "Deploy"
 
 3. **Configure Secrets**
@@ -37,7 +37,7 @@ This guide covers deploying the URDB Tariff Viewer application to various platfo
 
 ### Option 2: Heroku
 
-**Pros:** Free tier available, more customization  
+**Pros:** Free tier available, more customization
 **Cons:** Requires more configuration
 
 #### Steps:
@@ -55,7 +55,7 @@ This guide covers deploying the URDB Tariff Viewer application to various platfo
 
 3. **Ensure Procfile exists**
    ```
-   web: streamlit run src/main.py --server.port $PORT --server.headless true
+   web: streamlit run streamlit_app.py --server.port $PORT --server.headless true
    ```
 
 4. **Deploy**
@@ -78,7 +78,7 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "src/main.py", "--server.port=8501", "--server.headless=true"]
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.headless=true"]
 ```
 
 #### Build and Run

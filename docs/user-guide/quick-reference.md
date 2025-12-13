@@ -4,10 +4,7 @@
 
 ```bash
 # Option 1: Direct
-streamlit run src/main.py
-
-# Option 2: Using launcher script
-python run_app.py
+streamlit run streamlit_app.py
 ```
 
 ## Application Tabs

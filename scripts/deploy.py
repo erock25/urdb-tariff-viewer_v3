@@ -16,21 +16,18 @@ import os
 import sys
 from pathlib import Path
 
+
 def check_files():
     """Check if all required files exist"""
     required_files = [
-        'src/main.py',
-        'requirements.txt',
-        'data/tariffs/',
-        'data/load_profiles/',
-        'src/services/calculation_engine.py'
+        "streamlit_app.py",
+        "requirements.txt",
+        "data/tariffs/",
+        "data/load_profiles/",
+        "urdb_viewer/services/calculation_engine.py",
     ]
 
-    optional_files = [
-        'packages.txt',
-        '.streamlit/config.toml',
-        'README.md'
-    ]
+    optional_files = ["packages.txt", ".streamlit/config.toml", "README.md"]
 
     print("🔍 Checking required files...")
     missing_required = []
@@ -58,16 +55,18 @@ def check_files():
     print("✅ All required files present!")
     return True
 
+
 def validate_app():
     """Basic validation of the app structure"""
     print("\n🔧 Validating app structure...")
 
     try:
         # Try importing main dependencies
-        import streamlit
-        import pandas
         import numpy
+        import pandas
         import plotly
+        import streamlit
+
         print("✅ Python dependencies available")
     except ImportError as e:
         print(f"⚠️  Missing dependency: {e}")
@@ -75,37 +74,42 @@ def validate_app():
 
     # Check if app can be imported
     try:
-        sys.path.append('.')
+        sys.path.append(".")
         # We can't actually run the app here, but we can check syntax
-        with open('src/main.py', 'r', encoding='utf-8') as f:
+        with open("streamlit_app.py", "r", encoding="utf-8") as f:
             code = f.read()
-        compile(code, 'src/main.py', 'exec')
+        compile(code, "streamlit_app.py", "exec")
         print("✅ App syntax is valid")
     except SyntaxError as e:
-        print(f"❌ Syntax error in src/main.py: {e}")
+        print(f"❌ Syntax error in streamlit_app.py: {e}")
         return False
     except UnicodeDecodeError:
-        print("⚠️  Could not validate syntax due to encoding issues, but app should still work")
+        print(
+            "⚠️  Could not validate syntax due to encoding issues, but app should still work"
+        )
         print("   This is common with special characters in comments or strings")
 
     return True
+
 
 def create_deployment_files():
     """Create any missing deployment files"""
     print("\n📝 Creating deployment files...")
 
     # Create Procfile for Heroku
-    if not Path('Procfile').exists():
-        with open('Procfile', 'w') as f:
-            f.write("web: streamlit run src/main.py --server.port $PORT --server.headless true --server.address 0.0.0.0")
+    if not Path("Procfile").exists():
+        with open("Procfile", "w") as f:
+            f.write(
+                "web: streamlit run streamlit_app.py --server.port $PORT --server.headless true --server.address 0.0.0.0"
+            )
         print("✅ Created Procfile")
 
     # Create .streamlit directory and config if missing
-    if not Path('.streamlit').exists():
-        Path('.streamlit').mkdir()
+    if not Path(".streamlit").exists():
+        Path(".streamlit").mkdir()
         print("✅ Created .streamlit directory")
 
-    if not Path('.streamlit/config.toml').exists():
+    if not Path(".streamlit/config.toml").exists():
         config_content = """[server]
 headless = true
 port = 8501
@@ -114,9 +118,10 @@ address = "0.0.0.0"
 [browser]
 gatherUsageStats = false
 """
-        with open('.streamlit/config.toml', 'w') as f:
+        with open(".streamlit/config.toml", "w") as f:
             f.write(config_content)
         print("✅ Created .streamlit/config.toml")
+
 
 def show_deployment_options():
     """Show deployment options and instructions"""
@@ -145,6 +150,7 @@ def show_deployment_options():
     print("   • Paid services")
 
     print("\n📚 See DEPLOYMENT.md for detailed instructions!")
+
 
 def main():
     """Main deployment preparation function"""
@@ -180,6 +186,7 @@ def main():
     print("   4. Share the URL with others!")
 
     return True
+
 
 if __name__ == "__main__":
     success = main()

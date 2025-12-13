@@ -4,7 +4,7 @@
 
 ```
 URDB_JSON_Viewer_v3/
-├── src/                    # Application source code
+├── urdb_viewer/            # Application source code (Python package)
 │   ├── __init__.py
 │   ├── main.py             # Application entry point
 │   ├── components/         # Streamlit UI components
@@ -53,16 +53,16 @@ URDB_JSON_Viewer_v3/
 ```
 ┌─────────────────────────────────────────┐
 │           Streamlit UI Layer            │
-│         (src/components/*.py)           │
+│      (urdb_viewer/components/*.py)      │
 ├─────────────────────────────────────────┤
 │           Service Layer                 │
-│         (src/services/*.py)             │
+│       (urdb_viewer/services/*.py)       │
 ├─────────────────────────────────────────┤
 │           Model Layer                   │
-│          (src/models/*.py)              │
+│        (urdb_viewer/models/*.py)        │
 ├─────────────────────────────────────────┤
 │        Config & Utilities               │
-│    (src/config/*.py, src/utils/*.py)    │
+│ (urdb_viewer/config/*.py, urdb_viewer/utils/*.py) │
 └─────────────────────────────────────────┘
 ```
 
@@ -123,7 +123,7 @@ Each component is a self-contained Streamlit UI module:
 
 ### Settings Class
 
-Centralized configuration in `src/config/settings.py`:
+Centralized configuration in `urdb_viewer/config/settings.py`:
 
 ```python
 class Settings:
@@ -135,7 +135,7 @@ class Settings:
 
 ### Constants
 
-Static values in `src/config/constants.py`:
+Static values in `urdb_viewer/config/constants.py`:
 - Month names
 - Default chart dimensions
 - Rate unit labels
@@ -167,35 +167,35 @@ pip install -r requirements/dev.txt
 pytest
 
 # Format code
-black src/ tests/
-isort src/ tests/
+black urdb_viewer/ tests/
+isort urdb_viewer/ tests/
 
 # Type checking
-mypy src/
+mypy urdb_viewer/
 
 # Run app locally
-streamlit run src/main.py
+streamlit run streamlit_app.py
 ```
 
 ## Extending the Application
 
 ### Adding a New Component
 
-1. Create `src/components/new_component.py`
+1. Create `urdb_viewer/components/new_component.py`
 2. Add render function: `render_new_component_tab()`
-3. Export in `src/components/__init__.py`
-4. Import and use in `src/main.py`
+3. Export in `urdb_viewer/components/__init__.py`
+4. Import and use in `urdb_viewer/main.py`
 
 ### Adding a New Service
 
-1. Create `src/services/new_service.py`
+1. Create `urdb_viewer/services/new_service.py`
 2. Implement service class or functions
-3. Export in `src/services/__init__.py`
+3. Export in `urdb_viewer/services/__init__.py`
 4. Add tests in `tests/test_services/`
 
 ### Adding a New Model
 
-1. Create `src/models/new_model.py`
+1. Create `urdb_viewer/models/new_model.py`
 2. Define data class or model class
-3. Export in `src/models/__init__.py`
+3. Export in `urdb_viewer/models/__init__.py`
 4. Add tests in `tests/test_models/`

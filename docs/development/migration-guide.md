@@ -21,7 +21,7 @@ URDB_JSON_Viewer/
 ### After (v2.0)
 ```
 URDB_JSON_Viewer_v3/
-├── src/
+├── urdb_viewer/
 │   ├── main.py (entry point)
 │   ├── models/
 │   ├── services/
@@ -45,11 +45,7 @@ streamlit run app.py
 **New way:**
 ```bash
 # Option 1: Direct
-streamlit run src/main.py
-
-# Option 2: Using launcher script
-python run_app.py
-
+streamlit run streamlit_app.py
 # Option 3: Development mode
 pip install -e .
 urdb-viewer
@@ -61,12 +57,12 @@ Where old code moved:
 
 | Old Location | New Location |
 |--------------|--------------|
-| TariffViewer class | `src/models/tariff.py` |
-| Load profile generation | `src/models/load_profile.py` |
-| CSS styling | `src/utils/styling.py` |
-| Main UI logic | `src/components/*.py` |
-| File operations | `src/services/file_service.py` |
-| Calculations | `src/services/calculation_service.py` |
+| TariffViewer class | `urdb_viewer/models/tariff.py` |
+| Load profile generation | `urdb_viewer/models/load_profile.py` |
+| CSS styling | `urdb_viewer/utils/styling.py` |
+| Main UI logic | `urdb_viewer/components/*.py` |
+| File operations | `urdb_viewer/services/file_service.py` |
+| Calculations | `urdb_viewer/services/calculation_service.py` |
 
 ## Configuration Changes
 
@@ -119,11 +115,11 @@ If migrating custom changes from v1:
 
 ## Troubleshooting
 
-**Issue:** `ModuleNotFoundError: No module named 'src'`  
+**Issue:** `ModuleNotFoundError: No module named 'src'`
 **Solution:** Run from project root directory
 
-**Issue:** Import errors  
+**Issue:** Import errors
 **Solution:** Check `__init__.py` files exist in all packages
 
-**Issue:** Missing dependencies  
+**Issue:** Missing dependencies
 **Solution:** `pip install -r requirements/base.txt`

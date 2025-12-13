@@ -59,11 +59,11 @@ Documentation = "https://github.com/erock25/urdb-tariff-viewer_v2/tree/main/docs
 Changelog = "https://github.com/erock25/urdb-tariff-viewer_v2/blob/main/CHANGELOG.md"
 
 [project.scripts]
-urdb-viewer = "src.main:main"
+urdb-viewer = "urdb_viewer.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["urdb_viewer*"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
@@ -90,7 +90,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
-known_first_party = ["src"]
+known_first_party = ["urdb_viewer"]
 
 [tool.mypy]
 python_version = "3.9"
@@ -120,7 +120,7 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-    "--cov=src",
+    "--cov=urdb_viewer",
     "--cov-report=html",
     "--cov-report=term-missing",
     "--cov-fail-under=80",
@@ -132,7 +132,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["urdb_viewer"]
 omit = [
     "*/tests/*",
     "*/test_*",

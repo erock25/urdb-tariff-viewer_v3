@@ -85,7 +85,7 @@ pip install -r requirements/base.txt
 
 3. Run the application:
 ```bash
-streamlit run src/main.py
+streamlit run streamlit_app.py
 ```
 
 ### Development Setup
@@ -100,14 +100,14 @@ pip install -r requirements/dev.txt
 pytest
 
 # Run with coverage
-pytest --cov=src --cov-report=html
+pytest --cov=urdb_viewer --cov-report=html
 
 # Format code
-black src/ tests/
-isort src/ tests/
+black urdb_viewer/ tests/
+isort urdb_viewer/ tests/
 
 # Type checking
-mypy src/
+mypy urdb_viewer/
 ```
 
 ## Usage
@@ -243,8 +243,8 @@ pre-commit install
 pytest
 
 # Format code
-black src/ tests/
-isort src/ tests/
+black urdb_viewer/ tests/
+isort urdb_viewer/ tests/
 ```
 
 ## License
