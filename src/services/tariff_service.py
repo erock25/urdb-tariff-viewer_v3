@@ -2,6 +2,8 @@
 Tariff service for URDB Tariff Viewer.
 
 This module provides business logic for tariff data processing and manipulation.
+
+Includes Streamlit caching for improved performance.
 """
 
 import json
@@ -14,15 +16,17 @@ from src.models.tariff import TariffViewer, create_temp_viewer_with_modified_tar
 from src.services.file_service import FileService
 from src.config.settings import Settings
 from src.config.constants import MONTHS
+from src.utils.helpers import extract_tariff_data
 
 
 class TariffService:
     """Service for tariff data processing and business logic."""
     
     @staticmethod
+    @st.cache_resource(ttl=3600)  # Cache for 1 hour
     def load_tariff_viewer(file_path: Union[str, Path]) -> TariffViewer:
         """
-        Load a TariffViewer instance from a file.
+        Load a TariffViewer instance from a file with caching.
         
         Args:
             file_path (Union[str, Path]): Path to the tariff JSON file
@@ -33,9 +37,12 @@ class TariffService:
         return TariffViewer(file_path)
     
     @staticmethod
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
     def get_available_tariffs() -> List[Dict[str, Any]]:
         """
         Get a list of available tariff files with metadata.
+        
+        Results are cached for faster subsequent loads.
         
         Returns:
             List[Dict[str, Any]]: List of tariff file information
@@ -48,11 +55,8 @@ class TariffService:
                 # Load basic info without creating full TariffViewer
                 data = FileService.load_json_file(file_path)
                 
-                # Handle both direct tariff data and wrapped in 'items'
-                if 'items' in data:
-                    tariff = data['items'][0]
-                else:
-                    tariff = data
+                # Use shared helper for tariff extraction
+                tariff = extract_tariff_data(data)
                 
                 info = {
                     'file_path': file_path,
@@ -64,9 +68,8 @@ class TariffService:
                 }
                 tariff_info.append(info)
                 
-            except Exception as e:
-                # Skip files that can't be loaded
-                st.warning(f"Could not load tariff info from {file_path}: {str(e)}")
+            except Exception:
+                # Skip files that can't be loaded (don't show warning in cached function)
                 continue
         
         return tariff_info
@@ -103,11 +106,8 @@ class TariffService:
         else:
             raise ValueError(f"Invalid rate type: {rate_type}")
         
-        # Handle both direct tariff data and wrapped in 'items'
-        if 'items' in updated_data:
-            tariff = updated_data['items'][0]
-        else:
-            tariff = updated_data
+        # Use shared helper for tariff extraction
+        tariff = extract_tariff_data(updated_data)
         
         # Update the rate structure
         if rate_structure_key in tariff and period_index < len(tariff[rate_structure_key]):
@@ -139,11 +139,8 @@ class TariffService:
         # Deep copy the tariff data
         updated_data = json.loads(json.dumps(tariff_data))
         
-        # Handle both direct tariff data and wrapped in 'items'
-        if 'items' in updated_data:
-            tariff = updated_data['items'][0]
-        else:
-            tariff = updated_data
+        # Use shared helper for tariff extraction
+        tariff = extract_tariff_data(updated_data)
         
         # Update flat demand structure
         flat_demand_rates = tariff.get('flatdemandstructure', [])
@@ -175,11 +172,8 @@ class TariffService:
         }
         
         try:
-            # Handle both direct tariff data and wrapped in 'items'
-            if 'items' in tariff_data:
-                tariff = tariff_data['items'][0]
-            else:
-                tariff = tariff_data
+            # Use shared helper for tariff extraction
+            tariff = extract_tariff_data(tariff_data)
             
             # Check required fields
             required_fields = ['utility', 'name']

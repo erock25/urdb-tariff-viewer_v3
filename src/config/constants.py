@@ -10,6 +10,14 @@ from typing import List, Dict
 MONTHS: List[str] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+# Alias for clarity
+MONTHS_ABBREVIATED: List[str] = MONTHS
+
+MONTHS_FULL: List[str] = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+]
+
 HOURS: List[int] = list(range(24))
 
 # Default color schemes

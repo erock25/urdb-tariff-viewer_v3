@@ -22,11 +22,11 @@ try:
     from src.components.flat_demand_rates import render_flat_demand_rates_tab
     from src.components.cost_calculator import (
         render_cost_calculator_tab,
-        render_load_factor_analysis_tab,
         render_utility_cost_calculation_tab
     )
+    from src.components.load_factor import render_load_factor_analysis_tab
     from src.components.load_generator import render_load_generator_tab
-    from src.components.tariff_builder import render_tariff_builder_tab
+    from src.components.tariff_builder_pkg import render_tariff_builder_tab
 except ImportError:
     # Fallback for when running directly with streamlit run src/main.py
     import sys
@@ -41,11 +41,11 @@ except ImportError:
     from src.components.flat_demand_rates import render_flat_demand_rates_tab
     from src.components.cost_calculator import (
         render_cost_calculator_tab,
-        render_load_factor_analysis_tab,
         render_utility_cost_calculation_tab
     )
+    from src.components.load_factor import render_load_factor_analysis_tab
     from src.components.load_generator import render_load_generator_tab
-    from src.components.tariff_builder import render_tariff_builder_tab
+    from src.components.tariff_builder_pkg import render_tariff_builder_tab
 
 
 def initialize_app(dark_mode: bool = False) -> None:

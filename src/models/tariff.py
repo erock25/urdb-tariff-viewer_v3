@@ -82,6 +82,8 @@ class TariffViewer:
         """
         Get the rate for a specific period from the rate structure.
         
+        Works for both energy rates and demand rates.
+        
         Args:
             period_index (int): Index of the time period
             rate_structure (List[List[Dict]]): Rate structure from tariff
@@ -89,28 +91,16 @@ class TariffViewer:
         Returns:
             float: Rate value including any adjustments
         """
-        if period_index < len(rate_structure):
-            rate = rate_structure[period_index][0]['rate']
+        if period_index < len(rate_structure) and rate_structure[period_index]:
+            rate = rate_structure[period_index][0].get('rate', 0)
             adj = rate_structure[period_index][0].get('adj', 0)
             return rate + adj
         return 0
     
+    # Alias for backward compatibility
     def get_demand_rate(self, period_index: int, rate_structure: List[List[Dict]]) -> float:
-        """
-        Get the demand rate for a specific period from the rate structure.
-        
-        Args:
-            period_index (int): Index of the time period
-            rate_structure (List[List[Dict]]): Demand rate structure from tariff
-            
-        Returns:
-            float: Demand rate value including any adjustments
-        """
-        if period_index < len(rate_structure):
-            rate = rate_structure[period_index][0]['rate']
-            adj = rate_structure[period_index][0].get('adj', 0)
-            return rate + adj
-        return 0
+        """Alias for get_rate() - provided for backward compatibility."""
+        return self.get_rate(period_index, rate_structure)
     
     def update_rate_dataframes(self) -> None:
         """
@@ -189,51 +179,47 @@ class TariffViewer:
         else:
             self.flat_demand_df = pd.DataFrame(0, index=self.months, columns=['Rate ($/kW)'])
     
-    def create_tou_labels_table(self) -> pd.DataFrame:
+    def _calculate_period_statistics(
+        self,
+        weekday_schedule: List,
+        weekend_schedule: List,
+        year: int = 2025
+    ) -> tuple:
         """
-        Create a table showing TOU labels with their corresponding energy rates.
+        Calculate period hours and days from schedules.
         
+        This is a shared helper method used by both TOU and demand table creation.
+        
+        Args:
+            weekday_schedule: List of weekday period schedules by month
+            weekend_schedule: List of weekend period schedules by month
+            year: Reference year for calendar calculations
+            
         Returns:
-            pd.DataFrame: Table with TOU period information
+            tuple: (period_hours dict, period_days dict, total_hours)
         """
         import calendar
         
-        energy_labels = self.tariff.get('energytoulabels', None)
-        energy_rates = self.tariff.get('energyratestructure', [])
-
-        # If no energy rate structure, return empty DataFrame
-        if not energy_rates:
-            return pd.DataFrame()
-
-        # Get weekday and weekend schedules
-        weekday_schedule = self.tariff.get('energyweekdayschedule', [])
-        weekend_schedule = self.tariff.get('energyweekendschedule', [])
-
-        # Calculate annual hours and days for each period
         period_hours = {}
         period_days = {}
         total_hours = 0
-        year = 2025  # Reference year for calendar calculations (non-leap year for standard 8760 hours)
         
         if len(weekday_schedule) >= 12 and len(weekend_schedule) >= 12:
             for month in range(12):
-                # Get the calendar for this month
                 cal = calendar.monthcalendar(year, month + 1)
                 
-                # Count weekdays and weekend days
                 weekday_count = 0
                 weekend_count = 0
                 
                 for week in cal:
                     for day_idx, day in enumerate(week):
-                        if day == 0:  # Not part of this month
+                        if day == 0:
                             continue
-                        if day_idx < 5:  # Monday-Friday (0-4)
+                        if day_idx < 5:
                             weekday_count += 1
-                        else:  # Saturday-Sunday (5-6)
+                        else:
                             weekend_count += 1
                 
-                # Count hours per period for this month
                 for hour in range(24):
                     period = weekday_schedule[month][hour]
                     period_hours[period] = period_hours.get(period, 0) + weekday_count
@@ -242,7 +228,6 @@ class TariffViewer:
                     period = weekend_schedule[month][hour]
                     period_hours[period] = period_hours.get(period, 0) + weekend_count
                 
-                # Count days per period - check if period appears in this month's schedule
                 periods_in_weekday = set(weekday_schedule[month])
                 periods_in_weekend = set(weekend_schedule[month])
                 
@@ -253,42 +238,123 @@ class TariffViewer:
                     period_days[period] = period_days.get(period, 0) + weekend_count
                 
                 total_hours += (weekday_count + weekend_count) * 24
+        
+        return period_hours, period_days, total_hours
+    
+    def _get_months_for_period(
+        self,
+        period_index: int,
+        weekday_schedule: List,
+        weekend_schedule: List,
+        rate_structure: List
+    ) -> str:
+        """
+        Determine which months a period appears in for weekday and weekend schedules.
+        
+        This is a shared helper for both energy and demand period lookups.
+        
+        Args:
+            period_index: Index of the period
+            weekday_schedule: Weekday schedule from tariff
+            weekend_schedule: Weekend schedule from tariff
+            rate_structure: Rate structure to validate period indices
+            
+        Returns:
+            str: Formatted string describing when the period is used
+        """
+        weekday_months = []
+        weekend_months = []
 
-        # Create table data
+        for month_idx, month_schedule in enumerate(weekday_schedule):
+            if (month_idx < len(self.months) and 
+                period_index < len(rate_structure) and 
+                period_index in month_schedule):
+                weekday_months.append(self.months[month_idx])
+
+        for month_idx, month_schedule in enumerate(weekend_schedule):
+            if (month_idx < len(self.months) and 
+                period_index < len(rate_structure) and 
+                period_index in month_schedule):
+                weekend_months.append(self.months[month_idx])
+
+        parts = []
+        if weekday_months:
+            parts.append(f"{self._format_month_range(weekday_months)} (Weekday)")
+        if weekend_months:
+            parts.append(f"{self._format_month_range(weekend_months)} (Weekend)")
+
+        return ", ".join(parts) if parts else "Not used"
+    
+    def _create_rate_labels_table(
+        self,
+        rate_type: str,
+        labels_key: str,
+        rates_key: str,
+        weekday_schedule_key: str,
+        weekend_schedule_key: str
+    ) -> pd.DataFrame:
+        """
+        Create a table showing rate labels with their corresponding rates.
+        
+        This is a generic method used for both energy TOU and demand rate tables.
+        
+        Args:
+            rate_type: "energy" or "demand" - used for column naming
+            labels_key: Key in tariff for labels (e.g., 'energytoulabels')
+            rates_key: Key in tariff for rate structure (e.g., 'energyratestructure')
+            weekday_schedule_key: Key for weekday schedule
+            weekend_schedule_key: Key for weekend schedule
+            
+        Returns:
+            pd.DataFrame: Table with rate period information
+        """
+        labels = self.tariff.get(labels_key, None)
+        rate_structure = self.tariff.get(rates_key, [])
+
+        if not rate_structure:
+            return pd.DataFrame()
+
+        weekday_schedule = self.tariff.get(weekday_schedule_key, [])
+        weekend_schedule = self.tariff.get(weekend_schedule_key, [])
+
+        period_hours, period_days, total_hours = self._calculate_period_statistics(
+            weekday_schedule, weekend_schedule
+        )
+
+        # Determine column names and default label based on rate type
+        if rate_type == "energy":
+            period_col = 'TOU Period'
+            rate_unit = '$/kWh'
+            default_label = "TOU Label Not In Tariff JSON"
+        else:
+            period_col = 'Demand Period'
+            rate_unit = '$/kW'
+            default_label = "Demand Label Not In Tariff JSON"
+
+        labels_to_use = labels if labels else [default_label] * len(rate_structure)
         table_data = []
 
-        # If we have labels, use them; otherwise create generic labels
-        if energy_labels:
-            labels_to_use = energy_labels
-        else:
-            labels_to_use = ["TOU Label Not In Tariff JSON"] * len(energy_rates)
-
         for i, label in enumerate(labels_to_use):
-            if i < len(energy_rates) and energy_rates[i]:
-                rate_info = energy_rates[i][0]  # Get first tier
+            if i < len(rate_structure) and rate_structure[i]:
+                rate_info = rate_structure[i][0]
                 rate = rate_info.get('rate', 0)
                 adj = rate_info.get('adj', 0)
                 total_rate = rate + adj
 
-                # If using generic label, add period number for distinction
-                if not energy_labels:
-                    period_label = f"Period {i} - TOU Label Not In Tariff JSON"
-                else:
-                    period_label = label
-
-                # Determine which months this TOU period appears in
-                months_present = self._get_months_for_tou_period(i, weekday_schedule, weekend_schedule)
+                period_label = f"Period {i} - {default_label}" if not labels else label
+                months_present = self._get_months_for_period(
+                    i, weekday_schedule, weekend_schedule, rate_structure
+                )
                 
-                # Get hours, days, and percentage for this period
                 hours = period_hours.get(i, 0)
                 days = period_days.get(i, 0)
                 percentage = (hours / total_hours * 100) if total_hours > 0 else 0
 
                 table_data.append({
-                    'TOU Period': period_label,
-                    'Base Rate ($/kWh)': f"${rate:.4f}",
-                    'Adjustment ($/kWh)': f"${adj:.4f}",
-                    'Total Rate ($/kWh)': f"${total_rate:.4f}",
+                    period_col: period_label,
+                    f'Base Rate ({rate_unit})': f"${rate:.4f}",
+                    f'Adjustment ({rate_unit})': f"${adj:.4f}",
+                    f'Total Rate ({rate_unit})': f"${total_rate:.4f}",
                     'Hours/Year': hours,
                     '% of Year': f"{percentage:.1f}%",
                     'Days/Year': days,
@@ -296,6 +362,21 @@ class TariffViewer:
                 })
 
         return pd.DataFrame(table_data)
+
+    def create_tou_labels_table(self) -> pd.DataFrame:
+        """
+        Create a table showing TOU labels with their corresponding energy rates.
+        
+        Returns:
+            pd.DataFrame: Table with TOU period information
+        """
+        return self._create_rate_labels_table(
+            rate_type="energy",
+            labels_key='energytoulabels',
+            rates_key='energyratestructure',
+            weekday_schedule_key='energyweekdayschedule',
+            weekend_schedule_key='energyweekendschedule'
+        )
 
     def create_demand_labels_table(self) -> pd.DataFrame:
         """
@@ -304,180 +385,27 @@ class TariffViewer:
         Returns:
             pd.DataFrame: Table with demand period information
         """
-        import calendar
-        
-        demand_labels = self.tariff.get('demandlabels', None)
-        demand_rates = self.tariff.get('demandratestructure', [])
-
-        # If no demand rate structure, return empty DataFrame
-        if not demand_rates:
-            return pd.DataFrame()
-
-        # Get weekday and weekend schedules
-        demand_weekday_schedule = self.tariff.get('demandweekdayschedule', [])
-        demand_weekend_schedule = self.tariff.get('demandweekendschedule', [])
-
-        # Calculate annual hours and days for each period
-        period_hours = {}
-        period_days = {}
-        total_hours = 0
-        year = 2025  # Reference year for calendar calculations (non-leap year for standard 8760 hours)
-        
-        if len(demand_weekday_schedule) >= 12 and len(demand_weekend_schedule) >= 12:
-            for month in range(12):
-                # Get the calendar for this month
-                cal = calendar.monthcalendar(year, month + 1)
-                
-                # Count weekdays and weekend days
-                weekday_count = 0
-                weekend_count = 0
-                
-                for week in cal:
-                    for day_idx, day in enumerate(week):
-                        if day == 0:  # Not part of this month
-                            continue
-                        if day_idx < 5:  # Monday-Friday (0-4)
-                            weekday_count += 1
-                        else:  # Saturday-Sunday (5-6)
-                            weekend_count += 1
-                
-                # Count hours per period for this month
-                for hour in range(24):
-                    period = demand_weekday_schedule[month][hour]
-                    period_hours[period] = period_hours.get(period, 0) + weekday_count
-                
-                for hour in range(24):
-                    period = demand_weekend_schedule[month][hour]
-                    period_hours[period] = period_hours.get(period, 0) + weekend_count
-                
-                # Count days per period - check if period appears in this month's schedule
-                periods_in_weekday = set(demand_weekday_schedule[month])
-                periods_in_weekend = set(demand_weekend_schedule[month])
-                
-                for period in periods_in_weekday:
-                    period_days[period] = period_days.get(period, 0) + weekday_count
-                
-                for period in periods_in_weekend:
-                    period_days[period] = period_days.get(period, 0) + weekend_count
-                
-                total_hours += (weekday_count + weekend_count) * 24
-
-        # Create table data
-        table_data = []
-
-        # If we have labels, use them; otherwise create generic labels
-        if demand_labels:
-            labels_to_use = demand_labels
-        else:
-            labels_to_use = ["Demand Label Not In Tariff JSON"] * len(demand_rates)
-
-        for i, label in enumerate(labels_to_use):
-            if i < len(demand_rates) and demand_rates[i]:
-                rate_info = demand_rates[i][0]  # Get first tier
-                rate = rate_info.get('rate', 0)
-                adj = rate_info.get('adj', 0)
-                total_rate = rate + adj
-
-                # If using generic label, add period number for distinction
-                if not demand_labels:
-                    period_label = f"Period {i} - Demand Label Not In Tariff JSON"
-                else:
-                    period_label = label
-
-                # Determine which months this demand period appears in
-                months_present = self._get_months_for_demand_period(i, demand_weekday_schedule, demand_weekend_schedule)
-                
-                # Get hours, days, and percentage for this period
-                hours = period_hours.get(i, 0)
-                days = period_days.get(i, 0)
-                percentage = (hours / total_hours * 100) if total_hours > 0 else 0
-
-                table_data.append({
-                    'Demand Period': period_label,
-                    'Base Rate ($/kW)': f"${rate:.4f}",
-                    'Adjustment ($/kW)': f"${adj:.4f}",
-                    'Total Rate ($/kW)': f"${total_rate:.4f}",
-                    'Hours/Year': hours,
-                    '% of Year': f"{percentage:.1f}%",
-                    'Days/Year': days,
-                    'Months Present': months_present
-                })
-
-        return pd.DataFrame(table_data)
+        return self._create_rate_labels_table(
+            rate_type="demand",
+            labels_key='demandlabels',
+            rates_key='demandratestructure',
+            weekday_schedule_key='demandweekdayschedule',
+            weekend_schedule_key='demandweekendschedule'
+        )
 
     def _get_months_for_demand_period(self, period_index: int, weekday_schedule: List, weekend_schedule: List) -> str:
-        """
-        Determine which months a demand period appears in for weekday and weekend schedules.
-        
-        Args:
-            period_index (int): Index of the demand period
-            weekday_schedule (List): Weekday schedule from tariff
-            weekend_schedule (List): Weekend schedule from tariff
-            
-        Returns:
-            str: Formatted string describing when the period is used
-        """
-        weekday_months = []
-        weekend_months = []
-
-        # Get demand rates structure to check valid period indices
-        demand_rates = self.tariff.get('demandratestructure', [])
-
-        # Check weekday schedule
-        for month_idx, month_schedule in enumerate(weekday_schedule):
-            if month_idx < len(month_schedule) and period_index < len(demand_rates) and period_index in month_schedule:
-                weekday_months.append(self.months[month_idx])
-
-        # Check weekend schedule
-        for month_idx, month_schedule in enumerate(weekend_schedule):
-            if month_idx < len(month_schedule) and period_index < len(demand_rates) and period_index in month_schedule:
-                weekend_months.append(self.months[month_idx])
-
-        # Format the result
-        parts = []
-        if weekday_months:
-            parts.append(f"{self._format_month_range(weekday_months)} (Weekday)")
-        if weekend_months:
-            parts.append(f"{self._format_month_range(weekend_months)} (Weekend)")
-
-        return ", ".join(parts) if parts else "Not used"
+        """Legacy method - calls the consolidated _get_months_for_period."""
+        return self._get_months_for_period(
+            period_index, weekday_schedule, weekend_schedule,
+            self.tariff.get('demandratestructure', [])
+        )
 
     def _get_months_for_tou_period(self, period_index: int, weekday_schedule: List, weekend_schedule: List) -> str:
-        """
-        Determine which months a TOU period appears in for weekday and weekend schedules.
-        
-        Args:
-            period_index (int): Index of the TOU period
-            weekday_schedule (List): Weekday schedule from tariff
-            weekend_schedule (List): Weekend schedule from tariff
-            
-        Returns:
-            str: Formatted string describing when the period is used
-        """
-        weekday_months = []
-        weekend_months = []
-
-        # Get energy rates structure to check valid period indices
-        energy_rates = self.tariff.get('energyratestructure', [])
-
-        # Check weekday schedule
-        for month_idx, month_schedule in enumerate(weekday_schedule):
-            if month_idx < len(month_schedule) and period_index < len(energy_rates) and period_index in month_schedule:
-                weekday_months.append(self.months[month_idx])
-
-        # Check weekend schedule
-        for month_idx, month_schedule in enumerate(weekend_schedule):
-            if month_idx < len(month_schedule) and period_index < len(energy_rates) and period_index in month_schedule:
-                weekend_months.append(self.months[month_idx])
-
-        # Format the result
-        parts = []
-        if weekday_months:
-            parts.append(f"{self._format_month_range(weekday_months)} (Weekday)")
-        if weekend_months:
-            parts.append(f"{self._format_month_range(weekend_months)} (Weekend)")
-
-        return ", ".join(parts) if parts else "Not used"
+        """Legacy method - calls the consolidated _get_months_for_period."""
+        return self._get_months_for_period(
+            period_index, weekday_schedule, weekend_schedule,
+            self.tariff.get('energyratestructure', [])
+        )
 
     def _format_month_range(self, months: List[str]) -> str:
         """

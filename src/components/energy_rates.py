@@ -12,8 +12,16 @@ from io import BytesIO
 
 from src.models.tariff import TariffViewer
 from src.components.visualizations import create_heatmap
+from src.components.rate_editor import (
+    render_rate_editing_form,
+    ENERGY_RATE_CONFIG
+)
 from src.utils.styling import create_custom_divider_html
-from src.utils.helpers import generate_energy_rates_excel, clean_filename
+from src.utils.helpers import (
+    generate_energy_rates_excel,
+    clean_filename,
+    export_rate_table_to_excel
+)
 
 
 def render_energy_rates_tab(tariff_viewer: TariffViewer, options: Dict[str, Any]) -> None:
@@ -76,44 +84,15 @@ def render_energy_rates_tab(tariff_viewer: TariffViewer, options: Dict[str, Any]
             # Download button for the rate table
             col1, col2, col3 = st.columns([1, 2, 1])
             with col1:
-                # Generate Excel file for download
-                # Create a copy with numeric values for Excel export
-                excel_table = tou_table.copy()
-                
-                # Convert formatted strings to numeric values
-                # Remove $ and convert to float for rate columns
-                for col in ['Base Rate ($/kWh)', 'Adjustment ($/kWh)', 'Total Rate ($/kWh)']:
-                    if col in excel_table.columns:
-                        excel_table[col] = excel_table[col].str.replace('$', '').astype(float)
-                
-                # Remove % sign and convert to decimal for percentage column
-                if '% of Year' in excel_table.columns:
-                    excel_table['% of Year'] = excel_table['% of Year'].str.replace('%', '').astype(float) / 100
-                
-                buffer = BytesIO()
-                with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                    excel_table.to_excel(writer, sheet_name='Energy Rate Table', index=False)
-                    
-                    # Get the worksheet to apply formatting
-                    worksheet = writer.sheets['Energy Rate Table']
-                    
-                    # Find column indices for formatting
-                    headers = list(excel_table.columns)
-                    rate_columns = ['Base Rate ($/kWh)', 'Adjustment ($/kWh)', 'Total Rate ($/kWh)']
-                    
-                    # Apply accounting format to rate columns
-                    from openpyxl.styles import numbers
-                    for col_idx, col_name in enumerate(headers, start=1):
-                        if col_name in rate_columns:
-                            for row_idx in range(2, len(excel_table) + 2):
-                                cell = worksheet.cell(row=row_idx, column=col_idx)
-                                cell.number_format = '_($* #,##0.0000_);_($* (#,##0.0000);_($* "-"??_);_(@_)'
-                        elif col_name == '% of Year':
-                            for row_idx in range(2, len(excel_table) + 2):
-                                cell = worksheet.cell(row=row_idx, column=col_idx)
-                                cell.number_format = '0.0%'
-                
-                excel_data = buffer.getvalue()
+                # Use shared Excel export helper
+                rate_columns = ['Base Rate ($/kWh)', 'Adjustment ($/kWh)', 'Total Rate ($/kWh)']
+                excel_data = export_rate_table_to_excel(
+                    df=tou_table,
+                    sheet_name='Energy Rate Table',
+                    rate_columns=rate_columns,
+                    percentage_columns=['% of Year'],
+                    rate_precision=4
+                )
                 
                 # Create filename
                 utility_clean = clean_filename(tariff_viewer.utility_name)
@@ -140,7 +119,7 @@ def render_energy_rates_tab(tariff_viewer: TariffViewer, options: Dict[str, Any]
     st.markdown("#### ✏️ Rate Editing")
     
     with st.expander("🔧 Edit Energy Rates", expanded=False):
-        _render_comprehensive_rate_editing_section(tariff_viewer, options)
+        render_rate_editing_form(tariff_viewer, ENERGY_RATE_CONFIG, options)
     
     st.markdown("---")
     
@@ -189,166 +168,6 @@ def render_energy_rates_tab(tariff_viewer: TariffViewer, options: Dict[str, Any]
     
     # Add Excel download section at the bottom
     _render_excel_download_section(tariff_viewer)
-
-
-def _render_comprehensive_rate_editing_section(tariff_viewer: TariffViewer, options: Dict[str, Any]) -> None:
-    """
-    Render the comprehensive rate editing section (matching original app.py functionality).
-    
-    Args:
-        tariff_viewer (TariffViewer): TariffViewer instance
-        options (Dict[str, Any]): Display options
-    """
-    # Use modified tariff if available, otherwise use original
-    if st.session_state.get('modified_tariff'):
-        # Extract tariff data from modified structure
-        if 'items' in st.session_state.modified_tariff:
-            current_tariff = st.session_state.modified_tariff['items'][0]
-        else:
-            current_tariff = st.session_state.modified_tariff
-    else:
-        current_tariff = tariff_viewer.tariff
-
-    energy_labels = current_tariff.get('energytoulabels', [])
-    energy_rates = current_tariff.get('energyratestructure', [])
-    
-    if not energy_rates:
-        st.warning("⚠️ No energy rate structure found in this tariff.")
-        return
-
-    # Initialize form values in session state if not exists or if we need to refresh from current tariff
-    form_needs_init = (
-        'form_labels' not in st.session_state or 
-        len(st.session_state.get('form_labels', [])) != len(energy_rates) or
-        len(st.session_state.get('form_rates', [])) != len(energy_rates)
-    )
-    
-    if form_needs_init:
-        st.session_state.form_labels = energy_labels.copy() if energy_labels else []
-        st.session_state.form_rates = []
-        st.session_state.form_adjustments = []
-        
-        for i, rate_structure in enumerate(energy_rates):
-            if rate_structure:
-                rate_info = rate_structure[0]
-                st.session_state.form_rates.append(float(rate_info.get('rate', 0)))
-                st.session_state.form_adjustments.append(float(rate_info.get('adj', 0)))
-            else:
-                st.session_state.form_rates.append(0.0)
-                st.session_state.form_adjustments.append(0.0)
-        
-        # Ensure we have labels for all periods
-        while len(st.session_state.form_labels) < len(energy_rates):
-            st.session_state.form_labels.append(f"Period {len(st.session_state.form_labels)}")
-    
-    # Create editable form
-    with st.form("energy_rates_form"):
-        st.markdown("**Edit the rates below and click 'Apply Changes' to update:**")
-        
-        edited_labels = []
-        edited_rates = []
-        
-        # Create columns for the form
-        col_headers = st.columns([3, 2, 2, 1])
-        col_headers[0].write("**TOU Period Name**")
-        col_headers[1].write("**Base Rate ($/kWh)**")
-        col_headers[2].write("**Adjustment ($/kWh)**")
-        col_headers[3].write("**Total**")
-        
-        for i, rate_structure in enumerate(energy_rates):
-            if rate_structure:  # Ensure rate structure exists
-                rate_info = rate_structure[0]  # Get first tier
-                
-                # Use session state values if available, otherwise use original values
-                if i < len(st.session_state.form_labels):
-                    current_label = st.session_state.form_labels[i]
-                elif energy_labels and i < len(energy_labels):
-                    current_label = energy_labels[i]
-                else:
-                    current_label = f"Period {i}"
-                
-                if i < len(st.session_state.form_rates):
-                    base_rate = st.session_state.form_rates[i]
-                else:
-                    base_rate = float(rate_info.get('rate', 0))
-                
-                if i < len(st.session_state.form_adjustments):
-                    adjustment = st.session_state.form_adjustments[i]
-                else:
-                    adjustment = float(rate_info.get('adj', 0))
-                
-                # Create input fields
-                cols = st.columns([3, 2, 2, 1])
-                
-                with cols[0]:
-                    new_label = st.text_input(
-                        f"Label {i}",
-                        value=current_label,
-                        key=f"label_{i}",
-                        label_visibility="collapsed"
-                    )
-                    edited_labels.append(new_label)
-                
-                with cols[1]:
-                    new_base_rate = st.number_input(
-                        f"Base Rate {i}",
-                        value=base_rate,
-                        step=0.0001,
-                        format="%.4f",
-                        key=f"base_rate_{i}",
-                        label_visibility="collapsed"
-                    )
-                
-                with cols[2]:
-                    new_adjustment = st.number_input(
-                        f"Adjustment {i}",
-                        value=adjustment,
-                        step=0.0001,
-                        format="%.4f",
-                        key=f"adjustment_{i}",
-                        label_visibility="collapsed"
-                    )
-                
-                with cols[3]:
-                    total_rate = new_base_rate + new_adjustment
-                    st.write(f"${total_rate:.4f}")
-                
-                # Store the edited rate structure
-                edited_rate_info = rate_info.copy()
-                edited_rate_info['rate'] = new_base_rate
-                edited_rate_info['adj'] = new_adjustment
-                edited_rates.append([edited_rate_info])
-            else:
-                edited_rates.append([])
-                edited_labels.append(f"Period {i}")
-        
-        # Apply changes button
-        if st.form_submit_button("✅ Apply Changes", type="primary"):
-            # Update session state with new values
-            st.session_state.form_labels = edited_labels.copy()
-            st.session_state.form_rates = [edited_rates[i][0]['rate'] if edited_rates[i] else 0.0 for i in range(len(edited_rates))]
-            st.session_state.form_adjustments = [edited_rates[i][0]['adj'] if edited_rates[i] else 0.0 for i in range(len(edited_rates))]
-            
-            # Create modified tariff - use deep copy to avoid reference issues
-            import copy
-            if not st.session_state.get('modified_tariff'):
-                st.session_state.modified_tariff = copy.deepcopy(tariff_viewer.data)
-            
-            # Update the tariff data
-            if 'items' in st.session_state.modified_tariff:
-                tariff_data = st.session_state.modified_tariff['items'][0]
-            else:
-                tariff_data = st.session_state.modified_tariff
-            
-            # Update energy rate structure
-            tariff_data['energyratestructure'] = edited_rates
-            
-            # Update energy TOU labels
-            tariff_data['energytoulabels'] = edited_labels
-            
-            st.session_state.has_modifications = True
-            st.success("✅ Changes applied! The visualizations will update to reflect your changes.")
-            st.rerun()
 
 
 def show_energy_rate_comparison(tariff_viewer: TariffViewer, options: Dict[str, Any]) -> None:

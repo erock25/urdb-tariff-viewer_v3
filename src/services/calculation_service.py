@@ -2,16 +2,21 @@
 Calculation service for URDB Tariff Viewer.
 
 This module provides utility bill calculation services and load profile analysis.
+
+Includes Streamlit caching for improved performance on repeated calculations.
 """
 
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Union, Any, Tuple
 from pathlib import Path
+import streamlit as st
 
 from src.models.tariff import TariffViewer
 from src.services.calculation_engine import calculate_utility_costs_for_app
 from src.utils.exceptions import InvalidTariffError, InvalidLoadProfileError
+from src.utils.helpers import extract_tariff_data
+from src.config.constants import MONTHS_ABBREVIATED
 
 
 class CalculationService:
@@ -39,11 +44,8 @@ class CalculationService:
             InvalidLoadProfileError: If load profile data is invalid
         """
         try:
-            # Extract the actual tariff data from the wrapper structure
-            if 'items' in tariff_viewer.data:
-                tariff_data = tariff_viewer.data['items'][0]
-            else:
-                tariff_data = tariff_viewer.data
+            # Use shared helper for tariff extraction
+            tariff_data = extract_tariff_data(tariff_viewer.data)
                 
             # Use the existing calculation function
             results = calculate_utility_costs_for_app(
@@ -107,10 +109,8 @@ class CalculationService:
                 'kWh': 'sum'
             }).round(4)
             
-            # Convert month numbers to abbreviations
-            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            monthly_stats.index = [month_names[i-1] for i in monthly_stats.index]
+            # Use constants for month names
+            monthly_stats.index = [MONTHS_ABBREVIATED[i-1] for i in monthly_stats.index]
             
             # Hourly statistics
             hourly_stats = df.groupby('hour').agg({
@@ -132,7 +132,7 @@ class CalculationService:
             # Peak demand by month
             monthly_peaks = df.groupby('month')['load_kW'].max()
             # Convert month numbers to abbreviations for monthly_peaks
-            monthly_peaks.index = [month_names[i-1] for i in monthly_peaks.index]
+            monthly_peaks.index = [MONTHS_ABBREVIATED[i-1] for i in monthly_peaks.index]
             
             # Daily energy consumption by day of week
             daily_energy = df.groupby('day_name')['kWh'].sum().round(2)
@@ -286,9 +286,12 @@ class CalculationService:
             raise Exception(f"Tariff comparison error: {str(e)}")
     
     @staticmethod
+    @st.cache_data(ttl=60)  # Cache for 1 minute
     def validate_load_profile(load_profile_path: Union[str, Path]) -> Dict[str, Any]:
         """
         Validate a load profile file.
+        
+        Results are cached for faster repeated validation.
         
         Args:
             load_profile_path (Union[str, Path]): Path to load profile CSV
