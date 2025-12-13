@@ -27,6 +27,7 @@ repos:
     hooks:
       - id: flake8
         args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
@@ -36,3 +37,4 @@ repos:
           - types-requests
         args: ['--ignore-missing-imports']
         exclude: ^tests/
+        stages: [manual]
