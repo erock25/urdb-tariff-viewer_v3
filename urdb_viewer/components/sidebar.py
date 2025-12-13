@@ -190,15 +190,12 @@ def create_sidebar() -> Tuple[Optional[Path], Optional[Path], Dict[str, Any]]:
 
     st.sidebar.markdown("---")
 
-    # === DISPLAY PREFERENCES ===
-    st.sidebar.markdown("### 🎨 Display Preferences")
-    dark_mode = st.sidebar.checkbox("🌙 Dark Mode", value=False)
-
     # Compile options dictionary
     sidebar_options = {
         "chart_height": 600,  # Default chart height
         "text_size": 12,  # Default text size
-        "dark_mode": dark_mode,
+        # Dark mode removed; keep key for backwards compatibility with components.
+        "dark_mode": False,
         "customer_voltage": 480.0,  # Default customer voltage
         "load_generation": {
             "avg_load": 250.0,

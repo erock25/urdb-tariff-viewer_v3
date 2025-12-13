@@ -44,7 +44,6 @@ A comprehensive, modular Streamlit application for viewing and editing utility r
 - **Interactive Heatmaps**: Modern, responsive rate visualizations
 - **Load Duration Curves**: Analyze load profile characteristics
 - **Cost Comparison Charts**: Visual comparison of tariff options
-- **Dark Mode Support**: Toggle between light and dark themes
 
 ### 🛠️ Tariff Builder (NEW!)
 - **Create Custom Tariffs**: Build new tariff JSON files from scratch through an intuitive GUI
@@ -75,7 +74,7 @@ A comprehensive, modular Streamlit application for viewing and editing utility r
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd URDB_JSON_Viewer_v2
+cd URDB_JSON_Viewer_v3
 ```
 
 2. Install dependencies:
@@ -86,6 +85,15 @@ pip install -r requirements/base.txt
 3. Run the application:
 ```bash
 streamlit run streamlit_app.py
+```
+
+#### Using `uv` (recommended)
+
+If you use `uv`, you can create/sync the environment and run Streamlit like this:
+
+```bash
+uv sync
+uv run --no-sync streamlit run streamlit_app.py
 ```
 
 ### Development Setup
@@ -113,7 +121,7 @@ mypy urdb_viewer/
 ## Usage
 
 ### Loading Tariff Files
-- Place your URDB JSON files in the `tariffs/` subdirectory
+- Place your URDB JSON files in `data/tariffs/` (sample tariffs) or `data/user_data/` (your own)
 - The application will automatically detect and list available tariff files
 - Select a tariff file from the sidebar to begin analysis
 
@@ -122,7 +130,7 @@ mypy urdb_viewer/
 2. **Choose Time Period**: Select month, hour, and day type (weekday/weekend)
 3. **Modify Rate**: Enter the new rate value
 4. **Apply Changes**: Click "Update Rate" to apply modifications
-5. **Save Changes**: Use "Save Changes" to export modified tariffs
+5. **Save Changes**: Use the sidebar **Save As New File** flow (saves to `data/user_data/`)
 
 ### Creating New Tariffs (Tariff Builder)
 1. **Access the Builder**: Navigate to the "🏗️ Tariff Builder" tab
@@ -185,18 +193,20 @@ The application expects URDB JSON files in the standard format:
 
 ## Output
 
-Modified tariffs are saved to the `modified_tariffs/` directory with the prefix "modified_" added to the original filename.
+Modified tariffs are saved to `data/user_data/` (typically with a `modified_` prefix unless you choose a custom filename).
 
 ## Project Structure
 
 ```
 URDB_JSON_Viewer_v3/
-├── src/                    # Application source code
-│   ├── main.py             # Entry point
-│   ├── components/         # UI components
-│   ├── services/           # Business logic
-│   ├── models/             # Data models
+├── streamlit_app.py        # Streamlit entry point (recommended)
+├── urdb_viewer/            # Application source code (Python package)
+│   ├── main.py             # Composes UI tabs and routes
+│   ├── components/         # Streamlit UI components
+│   ├── services/           # Business logic (framework-agnostic)
+│   ├── models/             # Data models (framework-agnostic)
 │   ├── utils/              # Utilities
+│   ├── ui/                 # Streamlit-specific glue (session state, caching wrappers)
 │   └── config/             # Configuration
 ├── data/                   # Data files
 │   ├── tariffs/            # Sample tariffs

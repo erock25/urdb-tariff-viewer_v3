@@ -79,7 +79,7 @@ Where old code moved:
 
 **Old:** Hardcoded values throughout code
 
-**New:** Centralized in `src/config/`:
+**New:** Centralized in `urdb_viewer/config/`:
 - `settings.py` - Application settings
 - `constants.py` - Constants and defaults
 

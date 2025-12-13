@@ -38,9 +38,9 @@ streamlit run streamlit_app.py
 
 ### Edit Rates
 1. Go to Energy Rates or Demand Rates tab
-2. Modify values in the rate table
-3. Click "Apply Changes"
-4. Download modified JSON
+2. Expand the edit section and click "Update Rate" to apply changes
+3. In the sidebar, use **Save As New File** to save the modified tariff to `data/user_data/`
+4. Refresh and select the saved tariff under "👤 User Tariffs"
 
 ### Calculate Utility Bill
 1. Load a tariff

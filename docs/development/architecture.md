@@ -4,18 +4,22 @@
 
 ```
 URDB_JSON_Viewer_v3/
+├── streamlit_app.py        # Streamlit entry point (recommended)
 ├── urdb_viewer/            # Application source code (Python package)
 │   ├── __init__.py
-│   ├── main.py             # Application entry point
+│   ├── main.py             # Composes UI tabs and routes
 │   ├── components/         # Streamlit UI components
 │   │   ├── cost_calculator.py
 │   │   ├── demand_rates.py
 │   │   ├── energy_rates.py
 │   │   ├── flat_demand_rates.py
 │   │   ├── load_generator.py
+│   │   ├── load_profile_analysis.py
 │   │   ├── sidebar.py
-│   │   ├── tariff_builder.py
+│   │   ├── tariff_information.py
+│   │   ├── tariff_builder_pkg/     # Tariff Builder feature (multi-step wizard)
 │   │   └── visualizations.py
+│   ├── ui/                 # Streamlit-specific glue (session state, caching wrappers)
 │   ├── config/             # Configuration management
 │   │   ├── constants.py
 │   │   └── settings.py
@@ -116,7 +120,9 @@ Each component is a self-contained Streamlit UI module:
 | `demand_rates` | Demand charge management |
 | `cost_calculator` | Bill calculation UI |
 | `load_generator` | Profile generation UI |
-| `tariff_builder` | Tariff creation wizard |
+| `tariff_builder_pkg` | Tariff creation wizard |
+| `tariff_information` | Basic tariff info + raw JSON viewer |
+| `load_profile_analysis` | Load profile analysis UI |
 | `visualizations` | Charts and heatmaps |
 
 ## Configuration
@@ -184,7 +190,7 @@ streamlit run streamlit_app.py
 1. Create `urdb_viewer/components/new_component.py`
 2. Add render function: `render_new_component_tab()`
 3. Export in `urdb_viewer/components/__init__.py`
-4. Import and use in `urdb_viewer/main.py`
+4. Import and use in `streamlit_app.py` (recommended entrypoint)
 
 ### Adding a New Service
 

@@ -113,7 +113,9 @@ def create_deployment_files():
         config_content = """[server]
 headless = true
 port = 8501
-address = "0.0.0.0"
+address = "localhost"
+enableCORS = true
+enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false

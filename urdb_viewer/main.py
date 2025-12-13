@@ -24,7 +24,6 @@ from urdb_viewer.ui.app_bootstrap import (
     initialize_app,
     load_tariff_viewer,
 )
-from urdb_viewer.utils.styling import get_dark_mode_css
 
 
 def main() -> None:
@@ -32,9 +31,6 @@ def main() -> None:
     initialize_app(dark_mode=False)
 
     selected_tariff_file, selected_load_profile, sidebar_options = create_sidebar()
-
-    if sidebar_options.get("dark_mode", False):
-        st.markdown(get_dark_mode_css(), unsafe_allow_html=True)
 
     if not selected_tariff_file:
         st.error("❌ No tariff file selected. Please select a tariff from the sidebar.")

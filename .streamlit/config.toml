@@ -1,9 +1,8 @@
-[global]
-developmentMode = false
-
 [server]
 headless = true
-enableCORS = false
+port = 8501
+address = "localhost"
+enableCORS = true
 enableXsrfProtection = true
 
 [browser]
