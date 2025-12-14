@@ -17,6 +17,7 @@ URDB_JSON_Viewer_v3/
 │   │   ├── load_profile_analysis.py
 │   │   ├── sidebar.py
 │   │   ├── tariff_information.py
+│   │   ├── tariff_database_search.py  # Search & import from parquet DB
 │   │   ├── tariff_builder_pkg/     # Tariff Builder feature (multi-step wizard)
 │   │   └── visualizations.py
 │   ├── ui/                 # Streamlit-specific glue (session state, caching wrappers)
@@ -30,6 +31,7 @@ URDB_JSON_Viewer_v3/
 │   │   ├── calculation_engine.py
 │   │   ├── calculation_service.py
 │   │   ├── file_service.py
+│   │   ├── tariff_database_service.py  # Parquet DB search & format conversion
 │   │   └── tariff_service.py
 │   └── utils/              # Utilities
 │       ├── exceptions.py
@@ -109,6 +111,12 @@ URDB_JSON_Viewer_v3/
 - Rate structure operations
 - Schedule manipulation
 
+#### `TariffDatabaseService`
+- Search parquet database (usurdb.parquet)
+- Convert tariff formats (Local DB → API)
+- Save imported tariffs as JSON files
+- See [tariff-data-formats.md](./tariff-data-formats.md)
+
 ### Components
 
 Each component is a self-contained Streamlit UI module:
@@ -123,6 +131,7 @@ Each component is a self-contained Streamlit UI module:
 | `tariff_builder_pkg` | Tariff creation wizard |
 | `tariff_information` | Basic tariff info + raw JSON viewer |
 | `load_profile_analysis` | Load profile analysis UI |
+| `tariff_database_search` | Search & import from parquet database |
 | `visualizations` | Charts and heatmaps |
 
 ## Configuration
@@ -205,3 +214,27 @@ streamlit run streamlit_app.py
 2. Define data class or model class
 3. Export in `urdb_viewer/models/__init__.py`
 4. Add tests in `tests/test_models/`
+
+## Important: Tariff Data Formats
+
+This application works with tariff data from multiple sources that use different field naming conventions.
+
+**See [tariff-data-formats.md](./tariff-data-formats.md) for complete documentation on:**
+- OpenEI API Format vs Local Database Format
+- Field name mapping between formats
+- Rate structure format differences
+- Conversion functions and usage
+
+### Quick Reference
+
+| Source | Format | Conversion Needed |
+|--------|--------|-------------------|
+| OpenEI API | API Format (lowercase) | No |
+| usurdb.parquet | Local DB Format (camelCase) | Yes |
+| data/tariffs/*.json | API Format | No |
+| User uploads | Usually API Format | Check first |
+
+When importing from parquet, always use:
+```python
+TariffDatabaseService.convert_local_to_api_format(tariff)
+```

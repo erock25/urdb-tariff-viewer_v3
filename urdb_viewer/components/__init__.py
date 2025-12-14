@@ -22,6 +22,7 @@ from .rate_editor import (
 )
 from .sidebar import create_sidebar
 from .tariff_builder_pkg import render_tariff_builder_tab
+from .tariff_database_search import render_tariff_database_search_tab
 from .visualizations import create_flat_demand_chart, create_heatmap
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "create_heatmap",
     "create_flat_demand_chart",
     "render_tariff_builder_tab",
+    "render_tariff_database_search_tab",
     "render_rate_editing_form",
     "render_flat_demand_editing_form",
     "ENERGY_RATE_CONFIG",

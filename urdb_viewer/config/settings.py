@@ -24,6 +24,10 @@ class Settings:
     TESTS_DIR = BASE_DIR / "tests"
     SCRIPTS_DIR = BASE_DIR / "scripts"
 
+    # Tariff Database Paths (parquet files for searching)
+    TARIFF_DB_PATH = DATA_DIR / "usurdb.parquet"
+    UTILITY_INDEX_PATH = DATA_DIR / "utilities_index.parquet"
+
     # UI Settings
     DEFAULT_CHART_HEIGHT = 700
     DEFAULT_TEXT_SIZE = 12
