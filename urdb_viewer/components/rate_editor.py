@@ -91,8 +91,15 @@ def get_current_tariff_data(tariff_viewer: TariffViewer) -> Dict[str, Any]:
     Returns:
         Current tariff data dictionary
     """
-    if st.session_state.get("modified_tariff"):
-        return extract_tariff_data(st.session_state.modified_tariff)
+    modified = st.session_state.get("modified_tariff")
+    if modified:
+        modified_tariff = extract_tariff_data(modified)
+        # Defensive: only use modified data if it corresponds to the currently selected tariff.
+        # This prevents leaking edits from a different tariff into this editor.
+        if get_tariff_identifier(modified_tariff) == get_tariff_identifier(
+            tariff_viewer.tariff
+        ):
+            return modified_tariff
     return tariff_viewer.tariff
 
 
@@ -101,6 +108,7 @@ def initialize_form_state(
     rate_labels: List[str],
     rate_structure: List[List[Dict]],
     num_periods: int,
+    tariff_id: str,
 ) -> None:
     """
     Initialize session state for the rate editing form.
@@ -110,10 +118,15 @@ def initialize_form_state(
         rate_labels: List of period labels
         rate_structure: Rate structure from tariff
         num_periods: Number of rate periods
+        tariff_id: Unique identifier for the tariff
     """
     labels_key = f"{config.session_prefix}_labels"
     rates_key = f"{config.session_prefix}_rates"
     adjs_key = f"{config.session_prefix}_adjustments"
+    tariff_id_key = f"{config.session_prefix}_tariff_id"
+
+    # Store the tariff identifier to detect tariff changes
+    st.session_state[tariff_id_key] = tariff_id
 
     # Initialize labels
     st.session_state[labels_key] = rate_labels.copy() if rate_labels else []
@@ -136,20 +149,84 @@ def initialize_form_state(
             f"{config.default_label_prefix} {len(st.session_state[labels_key])}"
         )
 
+    # Clear any stale widget keys from previous tariff
+    # This is crucial because Streamlit widgets with keys persist their values
+    form_widget_prefixes = [
+        f"{config.form_key}_label_",
+        f"{config.form_key}_base_rate_",
+        f"{config.form_key}_adjustment_",
+    ]
 
-def check_form_needs_initialization(config: RateEditorConfig, num_periods: int) -> bool:
+    keys_to_delete = [
+        key
+        for key in list(st.session_state.keys())
+        if any(key.startswith(prefix) for prefix in form_widget_prefixes)
+    ]
+
+    for key in keys_to_delete:
+        del st.session_state[key]
+
+
+def get_tariff_identifier(tariff_data: Dict[str, Any]) -> str:
+    """
+    Generate a unique identifier for a tariff based on its content.
+
+    Args:
+        tariff_data: The tariff dictionary
+
+    Returns:
+        A string identifier for the tariff
+    """
+    # Use utility name + rate name + label as a unique identifier
+    utility = tariff_data.get("utility", "")
+    name = tariff_data.get("name", "")
+    label = tariff_data.get("label", "")
+    return f"{utility}|{name}|{label}"
+
+
+def get_tariff_key_suffix(tariff_data: Dict[str, Any]) -> str:
+    """
+    Generate a short, sanitized key suffix for widget keys based on tariff identity.
+
+    This ensures widget keys are unique per tariff, preventing Streamlit's
+    widget state from persisting across tariff switches.
+
+    Args:
+        tariff_data: The tariff dictionary
+
+    Returns:
+        A sanitized string suitable for use in widget keys
+    """
+    import hashlib
+
+    # Create a hash of the tariff identifier for a short, consistent key
+    identifier = get_tariff_identifier(tariff_data)
+    # Use first 8 chars of MD5 hash for brevity
+    return hashlib.md5(identifier.encode()).hexdigest()[:8]
+
+
+def check_form_needs_initialization(
+    config: RateEditorConfig, num_periods: int, tariff_id: str
+) -> bool:
     """
     Check if the form state needs to be initialized.
 
     Args:
         config: Rate editor configuration
         num_periods: Expected number of rate periods
+        tariff_id: Unique identifier for the current tariff
 
     Returns:
         True if initialization is needed
     """
     labels_key = f"{config.session_prefix}_labels"
     rates_key = f"{config.session_prefix}_rates"
+    tariff_id_key = f"{config.session_prefix}_tariff_id"
+
+    # Check if we have the right tariff loaded
+    current_tariff_id = st.session_state.get(tariff_id_key, "")
+    if current_tariff_id != tariff_id:
+        return True
 
     return (
         labels_key not in st.session_state
@@ -195,6 +272,12 @@ def apply_rate_changes(
             tariff_data[key] = value
 
     st.session_state.has_modifications = True
+    # Persist modified tariff for the currently active tariff file (if available).
+    active_file = st.session_state.get("active_tariff_file")
+    if active_file:
+        modified_map = st.session_state.get("modified_tariffs_by_file", {})
+        modified_map[active_file] = st.session_state.modified_tariff
+        st.session_state.modified_tariffs_by_file = modified_map
 
 
 def render_rate_editing_form(
@@ -221,12 +304,20 @@ def render_rate_editing_form(
 
     num_periods = len(rate_structure)
 
-    # Initialize form state if needed
-    if check_form_needs_initialization(config, num_periods):
-        initialize_form_state(config, rate_labels, rate_structure, num_periods)
+    # Generate tariff identifier for detecting tariff changes
+    tariff_id = get_tariff_identifier(current_tariff)
+    # Generate a short key suffix unique to this tariff for widget keys
+    tariff_key_suffix = get_tariff_key_suffix(current_tariff)
 
-    # Create the form
-    with st.form(config.form_key):
+    # Initialize form state if needed (including when tariff changes)
+    if check_form_needs_initialization(config, num_periods, tariff_id):
+        initialize_form_state(
+            config, rate_labels, rate_structure, num_periods, tariff_id
+        )
+
+    # Create the form with a tariff-specific key to ensure form state is isolated per tariff
+    form_key = f"{config.form_key}_{tariff_key_suffix}"
+    with st.form(form_key):
         st.markdown("**Edit the rates below and click 'Apply Changes' to update:**")
 
         edited_labels = []
@@ -244,11 +335,13 @@ def render_rate_editing_form(
             if rate_struct:
                 rate_info = rate_struct[0]
 
-                # Get current values from session state
+                # Get values from session state (populated by initialize_form_state)
+                # Session state is the source of truth for the current tariff's values
                 labels_key = f"{config.session_prefix}_labels"
                 rates_key = f"{config.session_prefix}_rates"
                 adjs_key = f"{config.session_prefix}_adjustments"
 
+                # Labels from session state or tariff data
                 current_label = (
                     st.session_state[labels_key][i]
                     if i < len(st.session_state.get(labels_key, []))
@@ -259,6 +352,8 @@ def render_rate_editing_form(
                     )
                 )
 
+                # Rates from session state (which was initialized from tariff data)
+                # Session state is refreshed when tariff changes via initialize_form_state
                 base_rate = (
                     st.session_state[rates_key][i]
                     if i < len(st.session_state.get(rates_key, []))
@@ -271,14 +366,14 @@ def render_rate_editing_form(
                     else float(rate_info.get("adj", 0))
                 )
 
-                # Create input fields
+                # Create input fields with tariff-specific keys to prevent cross-tariff state leakage
                 cols = st.columns([3, 2, 2, 1])
 
                 with cols[0]:
                     new_label = st.text_input(
                         f"Label {i}",
                         value=current_label,
-                        key=f"{config.form_key}_label_{i}",
+                        key=f"{config.form_key}_label_{tariff_key_suffix}_{i}",
                         label_visibility="collapsed",
                     )
                     edited_labels.append(new_label)
@@ -289,7 +384,7 @@ def render_rate_editing_form(
                         value=base_rate,
                         step=0.0001,
                         format="%.4f",
-                        key=f"{config.form_key}_base_rate_{i}",
+                        key=f"{config.form_key}_base_rate_{tariff_key_suffix}_{i}",
                         label_visibility="collapsed",
                     )
 
@@ -299,7 +394,7 @@ def render_rate_editing_form(
                         value=adjustment,
                         step=0.0001,
                         format="%.4f",
-                        key=f"{config.form_key}_adjustment_{i}",
+                        key=f"{config.form_key}_adjustment_{tariff_key_suffix}_{i}",
                         label_visibility="collapsed",
                     )
 
@@ -364,14 +459,25 @@ def render_flat_demand_editing_form(
         st.info("📝 **Note:** No flat demand rate structure found in this tariff JSON.")
         return
 
+    # Generate tariff identifier for detecting tariff changes
+    tariff_id = get_tariff_identifier(current_tariff)
+    tariff_key_suffix = get_tariff_key_suffix(current_tariff)
+
     # Initialize form state if needed
     rates_key = f"{config.session_prefix}_rates"
     adjs_key = f"{config.session_prefix}_adjustments"
+    tariff_id_key = f"{config.session_prefix}_tariff_id"
 
-    if (
-        rates_key not in st.session_state
+    # Check if we need to reinitialize (new tariff or missing state)
+    current_tariff_id = st.session_state.get(tariff_id_key, "")
+    needs_init = (
+        current_tariff_id != tariff_id
+        or rates_key not in st.session_state
         or len(st.session_state.get(rates_key, [])) != 12
-    ):
+    )
+
+    if needs_init:
+        st.session_state[tariff_id_key] = tariff_id
         st.session_state[rates_key] = []
         st.session_state[adjs_key] = []
 
@@ -390,8 +496,9 @@ def render_flat_demand_editing_form(
                 st.session_state[rates_key].append(0.0)
                 st.session_state[adjs_key].append(0.0)
 
-    # Create the form
-    with st.form(config.form_key):
+    # Create the form with tariff-specific key
+    form_key = f"{config.form_key}_{tariff_key_suffix}"
+    with st.form(form_key):
         st.markdown(
             "**Edit the monthly flat demand rates below and click 'Apply Changes' to update:**"
         )
@@ -429,7 +536,7 @@ def render_flat_demand_editing_form(
                     value=base_rate,
                     step=0.0001,
                     format="%.4f",
-                    key=f"flat_demand_base_rate_{month_idx}",
+                    key=f"flat_demand_base_rate_{tariff_key_suffix}_{month_idx}",
                     label_visibility="collapsed",
                 )
                 edited_rates.append(new_base_rate)
@@ -440,7 +547,7 @@ def render_flat_demand_editing_form(
                     value=adjustment,
                     step=0.0001,
                     format="%.4f",
-                    key=f"flat_demand_adjustment_{month_idx}",
+                    key=f"flat_demand_adjustment_{tariff_key_suffix}_{month_idx}",
                     label_visibility="collapsed",
                 )
                 edited_adjustments.append(new_adjustment)
@@ -479,5 +586,11 @@ def render_flat_demand_editing_form(
             tariff_data["flatdemandmonths"] = new_flat_demand_months
 
             st.session_state.has_modifications = True
+            # Persist modified tariff for the currently active tariff file (if available).
+            active_file = st.session_state.get("active_tariff_file")
+            if active_file:
+                modified_map = st.session_state.get("modified_tariffs_by_file", {})
+                modified_map[active_file] = st.session_state.modified_tariff
+                st.session_state.modified_tariffs_by_file = modified_map
             st.success("✅ Flat demand rate changes applied!")
             st.rerun()

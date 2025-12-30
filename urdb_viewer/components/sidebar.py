@@ -611,6 +611,13 @@ def _render_tariff_modification_section() -> None:
             help="Discard all changes and restore original tariff",
             use_container_width=True,
         ):
+            # Clear per-file modified state for the active tariff (if known)
+            active_file = st.session_state.get("active_tariff_file")
+            if active_file:
+                modified_map = st.session_state.get("modified_tariffs_by_file", {})
+                modified_map.pop(active_file, None)
+                st.session_state.modified_tariffs_by_file = modified_map
+
             st.session_state.modified_tariff = None
             st.session_state.has_modifications = False
             # Clear energy form state to reload original values
@@ -618,15 +625,38 @@ def _render_tariff_modification_section() -> None:
                 "form_labels",
                 "form_rates",
                 "form_adjustments",
+                "form_tariff_id",
                 "demand_form_labels",
                 "demand_form_rates",
                 "demand_form_adjustments",
+                "demand_form_tariff_id",
                 "flat_demand_form_rates",
                 "flat_demand_form_adjustments",
+                "flat_demand_form_tariff_id",
             ]
             for key in form_state_keys:
                 if key in st.session_state:
                     del st.session_state[key]
+
+            # Also clear form widget keys (Streamlit widgets persist values by key)
+            form_widget_prefixes = [
+                "energy_rates_form_label_",
+                "energy_rates_form_base_rate_",
+                "energy_rates_form_adjustment_",
+                "demand_rates_form_label_",
+                "demand_rates_form_base_rate_",
+                "demand_rates_form_adjustment_",
+                "flat_demand_base_rate_",
+                "flat_demand_adjustment_",
+            ]
+            keys_to_delete = [
+                key
+                for key in st.session_state.keys()
+                if any(key.startswith(prefix) for prefix in form_widget_prefixes)
+            ]
+            for key in keys_to_delete:
+                del st.session_state[key]
+
             st.rerun()
 
         if st.sidebar.button(
