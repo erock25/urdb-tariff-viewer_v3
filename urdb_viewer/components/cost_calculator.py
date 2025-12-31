@@ -222,7 +222,7 @@ def _perform_cost_calculation(
                 and st.session_state.get("modified_tariff") is not None
             ):
                 # Use modified tariff data directly
-                from urdb_viewer.services.calculation_engine import (
+                from urdb_viewer.core.bill_calculator import (
                     calculate_utility_costs_for_app,
                 )
 
@@ -279,7 +279,7 @@ def _display_calculation_results(
             f"**Tariff:** {tariff_info.get('utility', 'Unknown')} - {tariff_info.get('rate', 'Unknown')}"
         )
 
-    # Calculate summary metrics from DataFrame (matching original app.py)
+    # Calculate summary metrics from DataFrame
     total_annual_cost = results["total_charge"].sum()
     total_annual_kwh = results["total_kwh"].sum()
     avg_monthly_cost = results["total_charge"].mean()
@@ -304,7 +304,7 @@ def _display_calculation_results(
 
     st.markdown("---")
 
-    # Display detailed monthly breakdown (matching original app.py)
+    # Display detailed monthly breakdown
     st.markdown("#### 📅 Detailed Monthly Breakdown")
 
     # Prepare display dataframe

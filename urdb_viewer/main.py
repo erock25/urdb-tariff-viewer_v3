@@ -1,8 +1,9 @@
 """
 Main entry point for URDB Tariff Viewer.
 
-This is the new modular main application file that replaces the monolithic app.py.
-Updated: 2025-11-23
+This module contains the main Streamlit application entry point that composes
+all UI components into a cohesive interface. It handles tab layout and routing
+to appropriate component renderers.
 """
 
 import streamlit as st
@@ -31,7 +32,7 @@ from urdb_viewer.ui.app_bootstrap import (
 
 def main() -> None:
     """Main Streamlit entrypoint (composition only)."""
-    initialize_app(dark_mode=False)
+    initialize_app()
 
     selected_tariff_file, selected_load_profile, sidebar_options = create_sidebar()
 

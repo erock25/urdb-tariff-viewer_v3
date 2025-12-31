@@ -35,7 +35,7 @@ def render_energy_rates_tab(
         tariff_viewer (TariffViewer): TariffViewer instance
         options (Dict[str, Any]): Display and analysis options
     """
-    # Show current table (read-only) first - matching original
+    # Show current rate table (read-only)
     st.markdown("#### Current Rate Table")
 
     try:

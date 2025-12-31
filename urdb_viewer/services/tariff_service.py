@@ -26,13 +26,13 @@ class TariffService:
     @staticmethod
     def load_tariff_viewer(file_path: Union[str, Path]) -> TariffViewer:
         """
-        Load a TariffViewer instance from a file with caching.
+        Load a TariffViewer instance from a file.
 
         Args:
-            file_path (Union[str, Path]): Path to the tariff JSON file
+            file_path: Path to the tariff JSON file
 
         Returns:
-            TariffViewer: Loaded tariff viewer instance
+            Loaded tariff viewer instance
         """
         return TariffViewer(file_path)
 
@@ -41,10 +41,8 @@ class TariffService:
         """
         Get a list of available tariff files with metadata.
 
-        Results are cached for faster subsequent loads.
-
         Returns:
-            List[Dict[str, Any]]: List of tariff file information
+            List of tariff file information dictionaries
         """
         json_files = FileService.find_json_files()
         tariff_info = []
@@ -68,7 +66,7 @@ class TariffService:
                 tariff_info.append(info)
 
             except Exception:
-                # Skip files that can't be loaded (don't show warning in cached function)
+                # Skip files that can't be loaded
                 continue
 
         return tariff_info

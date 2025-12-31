@@ -202,12 +202,13 @@ URDB_JSON_Viewer_v3/
 ├── streamlit_app.py        # Streamlit entry point (recommended)
 ├── urdb_viewer/            # Application source code (Python package)
 │   ├── main.py             # Composes UI tabs and routes
+│   ├── core/               # Pure Python business logic (framework-agnostic)
 │   ├── components/         # Streamlit UI components
-│   ├── services/           # Business logic (framework-agnostic)
-│   ├── models/             # Data models (framework-agnostic)
-│   ├── utils/              # Utilities
-│   ├── ui/                 # Streamlit-specific glue (session state, caching wrappers)
-│   └── config/             # Configuration
+│   ├── services/           # Service layer (orchestration)
+│   ├── models/             # Data models (TariffViewer, LoadProfileGenerator)
+│   ├── utils/              # Utilities (validators, formatters, etc.)
+│   ├── ui/                 # Streamlit-specific glue (session state, caching)
+│   └── config/             # Configuration and constants
 ├── data/                   # Data files
 │   ├── tariffs/            # Sample tariffs
 │   ├── load_profiles/      # Load profile CSVs

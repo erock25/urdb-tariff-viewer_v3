@@ -8,14 +8,17 @@ operations here for the Streamlit app.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Union
+from typing import Any, Dict, Union
 
 import streamlit as st
 
-from urdb_viewer.services.calculation_service import CalculationService
+from urdb_viewer.utils.validators import validate_load_profile as _validate_load_profile
 
 
 @st.cache_data(ttl=60)
 def validate_load_profile(load_profile_path: Union[str, Path]) -> Dict[str, Any]:
-    """Cached wrapper for `CalculationService.validate_load_profile`."""
-    return CalculationService.validate_load_profile(load_profile_path)
+    """Cached wrapper for load profile validation.
+
+    Delegates to `urdb_viewer.utils.validators.validate_load_profile`.
+    """
+    return _validate_load_profile(load_profile_path)

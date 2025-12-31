@@ -25,11 +25,11 @@ def render_flat_demand_rates_tab(
     tariff_viewer: TariffViewer, options: Dict[str, Any]
 ) -> None:
     """
-    Render the flat demand rates analysis tab matching the original app.py layout.
+    Render the flat demand rates analysis tab.
 
     Args:
-        tariff_viewer (TariffViewer): TariffViewer instance
-        options (Dict[str, Any]): Display and analysis options
+        tariff_viewer: TariffViewer instance containing the tariff data
+        options: Display and analysis options from sidebar
     """
     st.markdown("### 📊 Seasonal/Monthly Flat Demand Rates")
 

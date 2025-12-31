@@ -21,10 +21,9 @@ from urdb_viewer.utils.helpers import extract_tariff_data
 from urdb_viewer.utils.styling import apply_custom_css
 
 
-def initialize_app(*, dark_mode: bool = False) -> None:
+def initialize_app() -> None:
     """Initialize Streamlit page config, styling, directories, and session state."""
     st.set_page_config(**Settings.get_streamlit_config())
-    # Dark mode removed; always use light theme styling.
     apply_custom_css()
     Settings.ensure_directories_exist()
 

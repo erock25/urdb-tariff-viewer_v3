@@ -14,12 +14,10 @@ class Settings:
 
     # Paths
     BASE_DIR = Path(__file__).parent.parent.parent
-    SRC_DIR = BASE_DIR / "src"
     DATA_DIR = BASE_DIR / "data"
     TARIFFS_DIR = DATA_DIR / "tariffs"
     LOAD_PROFILES_DIR = DATA_DIR / "load_profiles"
     USER_DATA_DIR = DATA_DIR / "user_data"
-    ARCHIVE_DIR = BASE_DIR / "archive"
     DOCS_DIR = BASE_DIR / "docs"
     TESTS_DIR = BASE_DIR / "tests"
     SCRIPTS_DIR = BASE_DIR / "scripts"
@@ -39,7 +37,7 @@ class Settings:
 
     # Application Settings
     APP_TITLE = "URDB Tariff Viewer"
-    APP_VERSION = "2.0.0"
+    APP_VERSION = "2.1.0"
 
     # OpenEI API Settings
     OPENEI_API_URL = "https://api.openei.org/utility_rates"

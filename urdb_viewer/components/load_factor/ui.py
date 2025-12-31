@@ -12,6 +12,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from urdb_viewer.config.constants import MONTHS_FULL
 from urdb_viewer.models.tariff import TariffViewer
 from urdb_viewer.utils.helpers import (
     calculate_annual_period_hour_percentages,
@@ -33,21 +34,10 @@ from .calculations import (
 # Constants
 # =============================================================================
 
-MONTH_NAMES = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-]
+# Use centralized month names from config
+MONTH_NAMES = MONTHS_FULL
 
+# Hours per month (non-leap year: 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 days)
 HOURS_IN_MONTH = [744, 672, 744, 720, 744, 720, 744, 744, 720, 744, 720, 744]
 
 

@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 
 from urdb_viewer.config.constants import MONTHS_ABBREVIATED
+from urdb_viewer.core.bill_calculator import calculate_utility_costs_for_app
 from urdb_viewer.models.tariff import TariffViewer
-from urdb_viewer.services.calculation_engine import calculate_utility_costs_for_app
 from urdb_viewer.utils.exceptions import InvalidLoadProfileError, InvalidTariffError
 from urdb_viewer.utils.helpers import extract_tariff_data
 
@@ -314,85 +314,14 @@ class CalculationService:
         """
         Validate a load profile file.
 
+        Delegates to `urdb_viewer.utils.validators.validate_load_profile`.
+
         Args:
             load_profile_path (Union[str, Path]): Path to load profile CSV
 
         Returns:
             Dict[str, Any]: Validation results
         """
-        validation_results = {
-            "is_valid": True,
-            "errors": [],
-            "warnings": [],
-            "info": {},
-        }
+        from urdb_viewer.utils.validators import validate_load_profile as _validate
 
-        try:
-            # Load the CSV file
-            df = pd.read_csv(load_profile_path)
-
-            # Check required columns
-            required_columns = ["timestamp", "load_kW"]
-            missing_columns = [col for col in required_columns if col not in df.columns]
-
-            if missing_columns:
-                validation_results["errors"].append(
-                    f"Missing required columns: {', '.join(missing_columns)}"
-                )
-                validation_results["is_valid"] = False
-                return validation_results
-
-            # Validate timestamp column
-            try:
-                pd.to_datetime(df["timestamp"])
-            except Exception:
-                validation_results["errors"].append("Invalid timestamp format")
-                validation_results["is_valid"] = False
-
-            # Validate load_kW column
-            if not pd.api.types.is_numeric_dtype(df["load_kW"]):
-                validation_results["errors"].append("load_kW column must be numeric")
-                validation_results["is_valid"] = False
-
-            # Check for negative values
-            if (df["load_kW"] < 0).any():
-                validation_results["warnings"].append("Negative load values found")
-
-            # Check for missing values
-            if df["load_kW"].isna().any():
-                validation_results["warnings"].append("Missing load values found")
-
-            # Add info about the file
-            validation_results["info"] = {
-                "row_count": len(df),
-                "columns": list(df.columns),
-                "date_range": {
-                    "start": (
-                        df["timestamp"].min()
-                        if validation_results["is_valid"]
-                        else None
-                    ),
-                    "end": (
-                        df["timestamp"].max()
-                        if validation_results["is_valid"]
-                        else None
-                    ),
-                },
-                "load_range": {
-                    "min": (
-                        df["load_kW"].min() if validation_results["is_valid"] else None
-                    ),
-                    "max": (
-                        df["load_kW"].max() if validation_results["is_valid"] else None
-                    ),
-                    "avg": (
-                        df["load_kW"].mean() if validation_results["is_valid"] else None
-                    ),
-                },
-            }
-
-        except Exception as e:
-            validation_results["errors"].append(f"File reading error: {str(e)}")
-            validation_results["is_valid"] = False
-
-        return validation_results
+        return _validate(load_profile_path)

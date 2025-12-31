@@ -8,7 +8,7 @@ IMPORTANT: Tariff Data Format Conversion
 ========================================
 This service handles tariffs from the usurdb.parquet file which stores data in
 "Local DB Format" (MongoDB export with camelCase field names). However, the
-URDB_JSON_Viewer app expects tariffs in "OpenEI API Format" (lowercase field names).
+URDB Tariff Viewer app expects tariffs in "OpenEI API Format" (lowercase field names).
 
 When importing tariffs, use `convert_local_to_api_format()` to convert field names.
 

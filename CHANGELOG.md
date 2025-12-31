@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - LICENSE file (MIT)
 - `.pre-commit-config.yaml` for automated code quality checks
-- `src/py.typed` marker for PEP 561 compliance
+- `urdb_viewer/py.typed` marker for PEP 561 compliance
 - Proper `CHANGELOG.md` (this file)
 - Consolidated documentation in `docs/` folder
 
@@ -33,8 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced Cost Calculator**: Advanced utility bill calculations
 - **Load Profile Generator**: Create synthetic load profiles
 - **Advanced Analytics**: Detailed load profile analysis tools
-- **Modern UI**: Updated styling with dark mode support
-- **Centralized Configuration**: Settings management in `src/config/`
+- **Modern UI**: Updated styling and improved user experience
+- **Centralized Configuration**: Settings management in `urdb_viewer/config/`
 
 ### Changed
 - Split monolithic `app.py` (3,333 lines) into modular components
@@ -42,11 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved from single requirements.txt to split requirements (base/dev/prod)
 
 ### Technical Details
-- Components in `src/components/`
-- Business logic in `src/services/`
-- Data models in `src/models/`
-- Utilities in `src/utils/`
-- Configuration in `src/config/`
+- Components in `urdb_viewer/components/`
+- Core business logic in `urdb_viewer/core/`
+- Service layer in `urdb_viewer/services/`
+- Data models in `urdb_viewer/models/`
+- Utilities in `urdb_viewer/utils/`
+- Configuration in `urdb_viewer/config/`
 
 ## [1.0.0] - 2024-09-06
 
@@ -57,4 +58,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demand charge display
 - Rate editing capabilities
 - Basic cost calculations
-- Dark/light mode toggle

@@ -104,14 +104,14 @@ def get_active_energy_periods_for_year(tariff_data: Dict[str, Any]) -> Dict[int,
 
 
 def calculate_annual_period_hour_percentages(
-    tariff_data: Dict[str, Any], year: int = 2024
+    tariff_data: Dict[str, Any], year: int = 2025
 ) -> Dict[int, float]:
     """
     Calculate what percentage of the year's hours each energy period is present.
 
     Args:
         tariff_data: Tariff data dictionary
-        year: Year for calendar calculation (default 2024)
+        year: Year for calendar calculation (default 2025)
 
     Returns:
         Dictionary mapping period index to percentage of year (0-100)
@@ -160,7 +160,7 @@ def calculate_annual_period_hour_percentages(
 
 
 def calculate_period_hour_percentages(
-    tariff_data: Dict[str, Any], month: int, year: int = 2024
+    tariff_data: Dict[str, Any], month: int, year: int = 2025
 ) -> Dict[int, float]:
     """
     Calculate what percentage of the month's hours each energy period is present.
@@ -168,7 +168,7 @@ def calculate_period_hour_percentages(
     Args:
         tariff_data: Tariff data dictionary
         month: Month index (0-11)
-        year: Year for calendar calculation (default 2024)
+        year: Year for calendar calculation (default 2025)
 
     Returns:
         Dictionary mapping period index to percentage of month (0-100)

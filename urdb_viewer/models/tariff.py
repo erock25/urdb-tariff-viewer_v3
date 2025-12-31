@@ -487,44 +487,55 @@ class TariffViewer:
             return ", ".join(months)
 
 
+class TempTariffViewer(TariffViewer):
+    """
+    Temporary TariffViewer that works with in-memory data instead of files.
+
+    Use this class when you have modified tariff data in memory and need
+    to create a viewer without saving to disk first.
+    """
+
+    def __init__(self, tariff_data: Dict[str, Any]):
+        """
+        Initialize TempTariffViewer with in-memory tariff data.
+
+        Args:
+            tariff_data: Tariff data dictionary (may be wrapped in 'items' or not)
+        """
+        # Skip file loading and work directly with data
+        self.data = tariff_data
+
+        # Handle both direct tariff data and wrapped in 'items'
+        if "items" in self.data:
+            self.tariff = self.data["items"][0]
+        else:
+            self.tariff = self.data
+            self.data = {"items": [self.data]}  # Wrap for consistency
+
+        # Extract basic information with fallbacks
+        self.utility_name = self.tariff.get("utility", "Unknown Utility")
+        self.rate_name = self.tariff.get("name", "Unknown Rate")
+        self.sector = self.tariff.get("sector", "Unknown Sector")
+        self.description = self.tariff.get("description", "No description available")
+
+        # Setup data structures
+        self.months = MONTHS
+        self.hours = HOURS
+        self.update_rate_dataframes()
+
+
 def create_temp_viewer_with_modified_tariff(
-    modified_tariff_data: Dict,
-) -> "TempTariffViewer":
+    modified_tariff_data: Dict[str, Any],
+) -> TempTariffViewer:
     """
     Create a temporary TariffViewer instance with modified tariff data.
 
+    This is a convenience function that creates a TempTariffViewer.
+
     Args:
-        modified_tariff_data (Dict): Modified tariff data
+        modified_tariff_data: Modified tariff data dictionary
 
     Returns:
-        TempTariffViewer: Temporary viewer instance
+        TempTariffViewer instance
     """
-
-    class TempTariffViewer(TariffViewer):
-        """Temporary TariffViewer that works with in-memory data instead of files."""
-
-        def __init__(self, tariff_data):
-            # Skip file loading and work directly with data
-            self.data = tariff_data
-
-            # Handle both direct tariff data and wrapped in 'items'
-            if "items" in self.data:
-                self.tariff = self.data["items"][0]
-            else:
-                self.tariff = self.data
-                self.data = {"items": [self.data]}  # Wrap for consistency
-
-            # Extract basic information with fallbacks
-            self.utility_name = self.tariff.get("utility", "Unknown Utility")
-            self.rate_name = self.tariff.get("name", "Unknown Rate")
-            self.sector = self.tariff.get("sector", "Unknown Sector")
-            self.description = self.tariff.get(
-                "description", "No description available"
-            )
-
-            # Setup data structures
-            self.months = MONTHS
-            self.hours = HOURS
-            self.update_rate_dataframes()
-
     return TempTariffViewer(modified_tariff_data)

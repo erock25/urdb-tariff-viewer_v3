@@ -29,11 +29,11 @@ def render_demand_rates_tab(
     tariff_viewer: TariffViewer, options: Dict[str, Any]
 ) -> None:
     """
-    Render the demand rates analysis tab matching the original app.py layout.
+    Render the demand rates analysis tab.
 
     Args:
-        tariff_viewer (TariffViewer): TariffViewer instance
-        options (Dict[str, Any]): Display and analysis options
+        tariff_viewer: TariffViewer instance containing the tariff data
+        options: Display and analysis options from sidebar
     """
     # Use shared helper to get current tariff data
     current_demand_tariff = get_current_tariff_data(tariff_viewer)
@@ -123,7 +123,7 @@ def render_demand_rates_tab(
 
     st.markdown("---")
 
-    # Demand Labels Table - Editable (moved above heatmaps to match original)
+    # Demand Labels Table - Editable (above heatmaps for better UX)
     st.markdown("#### 🏷️ Demand Period Labels & Rates (Editable)")
 
     with st.expander("🔧 Edit Demand Rates", expanded=False):
